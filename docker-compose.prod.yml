@@ -1,11 +1,11 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: triply-db
+    container_name: triptab-db
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      POSTGRES_DB: ${POSTGRES_DB:-triply}
+      POSTGRES_DB: ${POSTGRES_DB:-triptab}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -19,10 +19,10 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: triply-backend
+    container_name: triptab-backend
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-triply}
-      DATABASE_URL_SYNC: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-triply}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-triptab}
+      DATABASE_URL_SYNC: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-triptab}
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
       CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost"]}
       DEBUG: "false"
@@ -38,7 +38,7 @@ services:
       target: production
       args:
         VITE_API_URL: ${VITE_API_URL:-/api/v1}
-    container_name: triply-frontend
+    container_name: triptab-frontend
     ports:
       - "80:80"
     depends_on:

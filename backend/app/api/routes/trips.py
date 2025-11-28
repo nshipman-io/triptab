@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import DbSession, CurrentUser
@@ -14,15 +14,21 @@ router = APIRouter(prefix="/trips", tags=["trips"])
 
 @router.get("", response_model=list[TripResponse])
 async def get_trips(current_user: CurrentUser, db: DbSession):
+    # Get trip IDs where user is a member
+    member_trip_ids = select(TripMember.trip_id).where(
+        TripMember.user_id == current_user.id
+    )
+
     # Get trips where user is owner or member
     result = await db.execute(
         select(Trip)
-        .outerjoin(TripMember)
         .where(
-            (Trip.owner_id == current_user.id) |
-            (TripMember.user_id == current_user.id)
+            or_(
+                Trip.owner_id == current_user.id,
+                Trip.id.in_(member_trip_ids)
+            )
         )
-        .distinct()
+        .order_by(Trip.created_at.desc())
     )
     trips = result.scalars().all()
     return trips

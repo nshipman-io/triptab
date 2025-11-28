@@ -1,14 +1,16 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useLocation } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plane } from 'lucide-react'
+import { Globe } from 'lucide-react'
 import { api } from '@/lib/api'
 
 export function Register() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const from = (location.state as { from?: string })?.from || '/plan'
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -37,7 +39,7 @@ export function Register() {
       // Auto-login after registration
       const loginResponse = await api.login(email, password)
       api.setToken(loginResponse.access_token)
-      navigate('/dashboard')
+      navigate(from)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed')
     } finally {
@@ -50,8 +52,8 @@ export function Register() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <Link to="/" className="mb-4 flex items-center justify-center gap-2">
-            <Plane className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">Triply</span>
+            <Globe className="h-8 w-8 text-primary" />
+            <span className="text-2xl font-bold">Triptab</span>
           </Link>
           <CardTitle>Create an account</CardTitle>
           <CardDescription>Start planning your next adventure</CardDescription>

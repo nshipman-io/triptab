@@ -1,6 +1,6 @@
 # Architecture Overview
 
-This document explains the architectural decisions and patterns used in Triply.
+This document explains the architectural decisions and patterns used in Triptab.
 
 ## System Architecture
 
