@@ -1,9 +1,34 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Globe, Users, Calendar, Share2, Plane } from 'lucide-react'
+import { Globe, Users, Calendar, Share2, Plane, User, LogOut } from 'lucide-react'
+import { api } from '@/lib/api'
+import type { User as UserType } from '@/types'
 
 export function Home() {
+  const [user, setUser] = useState<UserType | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const userData = await api.getCurrentUser()
+        setUser(userData as UserType)
+      } catch {
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+    checkAuth()
+  }, [])
+
+  const handleLogout = () => {
+    api.setToken(null)
+    setUser(null)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Hero Section */}
@@ -13,14 +38,36 @@ export function Home() {
             <Globe className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold">Triptab</span>
           </div>
-          <div className="flex items-center gap-4">
-            <Link to="/login">
-              <Button variant="ghost">Log in</Button>
-            </Link>
-            <Link to="/register">
-              <Button>Get Started</Button>
-            </Link>
-          </div>
+          {!loading && (
+            <div className="flex items-center gap-4">
+              {user ? (
+                <>
+                  <Link to="/dashboard">
+                    <Button variant="ghost">My Trips</Button>
+                  </Link>
+                  <Link to="/plan">
+                    <Button variant="ghost">Plan a Trip</Button>
+                  </Link>
+                  <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-1.5">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">{user.name}</span>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={handleLogout}>
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login">
+                    <Button variant="ghost">Log in</Button>
+                  </Link>
+                  <Link to="/register">
+                    <Button>Get Started</Button>
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
         </nav>
       </header>
 
@@ -118,17 +165,36 @@ export function Home() {
         <section className="py-20 text-center">
           <Card className="mx-auto max-w-2xl bg-primary text-primary-foreground">
             <CardHeader>
-              <CardTitle className="text-3xl">Ready to plan your next adventure?</CardTitle>
+              <CardTitle className="text-3xl">
+                {user ? 'Ready for your next adventure?' : 'Ready to plan your next adventure?'}
+              </CardTitle>
               <CardDescription className="text-primary-foreground/80">
-                Join thousands of travelers who plan smarter with Triptab
+                {user
+                  ? 'Start planning a new trip or check out your existing ones'
+                  : 'Join thousands of travelers who plan smarter with Triptab'}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Link to="/register">
-                <Button size="lg" variant="secondary">
-                  Create Free Account
-                </Button>
-              </Link>
+            <CardContent className="flex justify-center gap-4">
+              {user ? (
+                <>
+                  <Link to="/plan">
+                    <Button size="lg" variant="secondary">
+                      Plan New Trip
+                    </Button>
+                  </Link>
+                  <Link to="/dashboard">
+                    <Button size="lg" variant="secondary" className="bg-white/20 hover:bg-white/30">
+                      View My Trips
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <Link to="/register">
+                  <Button size="lg" variant="secondary">
+                    Create Free Account
+                  </Button>
+                </Link>
+              )}
             </CardContent>
           </Card>
         </section>
