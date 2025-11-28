@@ -3,13 +3,22 @@ import { Link, useParams } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Plane, Hotel, MapPin, Utensils, Car, Calendar, Users, Share2, Plus,
-  Check, Copy, ArrowLeft, GripVertical
+  Check, Copy, ArrowLeft, GripVertical, ExternalLink, Search, Compass, Settings2
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { Trip, ItineraryItem, TripMember, ItineraryItemType } from '@/types'
 import { cn } from '@/lib/utils'
+import {
+  getFlightSearchLinks,
+  getHotelSearchLinks,
+  getExperienceSearchLinks,
+  getOpenTableUrl,
+  getRentalCarsUrl,
+} from '@/lib/affiliates'
+import { searchAirports, formatAirport, type Airport } from '@/lib/airports'
 
 const ITEM_ICONS: Record<ItineraryItemType, React.ReactNode> = {
   flight: <Plane className="h-5 w-5" />,
@@ -27,6 +36,45 @@ const ITEM_COLORS: Record<ItineraryItemType, string> = {
   transport: 'bg-gray-100 text-gray-700',
 }
 
+// Get booking link for an itinerary item
+function getItemBookingLink(item: ItineraryItem, trip: Trip): string | null {
+  const destination = item.location || trip.destination
+
+  switch (item.type) {
+    case 'flight':
+      return getFlightSearchLinks({
+        destination,
+        departDate: item.start_time,
+        returnDate: item.end_time || trip.end_date,
+        adults: trip.preferences.num_travelers,
+      }).googleFlights
+    case 'hotel':
+      return getHotelSearchLinks({
+        destination,
+        checkIn: item.start_time,
+        checkOut: item.end_time || trip.end_date,
+        guests: trip.preferences.num_travelers,
+      }).bookingCom
+    case 'experience':
+      return getExperienceSearchLinks({
+        destination,
+        date: item.start_time,
+      }).viator
+    case 'restaurant':
+      return getOpenTableUrl(destination, item.start_time, trip.preferences.num_travelers)
+    case 'transport':
+      return getRentalCarsUrl(destination, item.start_time, item.end_time || trip.end_date)
+    default:
+      return null
+  }
+}
+
+// Helper to format date for input[type="date"]
+function formatDateForInput(dateStr: string): string {
+  const datePart = dateStr.split('T')[0]
+  return datePart
+}
+
 export function TripDetail() {
   const { id } = useParams()
   const [trip, setTrip] = useState<Trip | null>(null)
@@ -34,6 +82,20 @@ export function TripDetail() {
   const [members, setMembers] = useState<TripMember[]>([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+
+  // Editable search parameters
+  const [showSearchSettings, setShowSearchSettings] = useState(false)
+  const [searchDepartDate, setSearchDepartDate] = useState('')
+  const [searchReturnDate, setSearchReturnDate] = useState('')
+  const [searchTravelersInput, setSearchTravelersInput] = useState('1')
+  const [searchOrigin, setSearchOrigin] = useState('')
+  const [searchDestination, setSearchDestination] = useState('')
+  const [originQuery, setOriginQuery] = useState('')
+  const [originResults, setOriginResults] = useState<Airport[]>([])
+  const [showOriginDropdown, setShowOriginDropdown] = useState(false)
+
+  // Computed travelers value (defaults to 1 for affiliate links)
+  const searchTravelers = parseInt(searchTravelersInput) || 1
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,9 +106,16 @@ export function TripDetail() {
           api.getItineraryItems(id),
           api.getTripMembers(id),
         ])
-        setTrip(tripData as Trip)
+        const loadedTrip = tripData as Trip
+        setTrip(loadedTrip)
         setItems((itemsData as { data: ItineraryItem[] }).data || itemsData as ItineraryItem[])
         setMembers((membersData as { data: TripMember[] }).data || membersData as TripMember[])
+
+        // Initialize search parameters from trip data
+        setSearchDepartDate(formatDateForInput(loadedTrip.start_date))
+        setSearchReturnDate(formatDateForInput(loadedTrip.end_date))
+        setSearchTravelersInput(String(loadedTrip.preferences.num_travelers || 1))
+        setSearchDestination(loadedTrip.destination)
       } catch (error) {
         console.error('Failed to load trip:', error)
       } finally {
@@ -56,6 +125,18 @@ export function TripDetail() {
 
     fetchData()
   }, [id])
+
+  // Handle origin airport search
+  useEffect(() => {
+    if (originQuery.length >= 2) {
+      const results = searchAirports(originQuery, 5)
+      setOriginResults(results)
+      setShowOriginDropdown(results.length > 0)
+    } else {
+      setOriginResults([])
+      setShowOriginDropdown(false)
+    }
+  }, [originQuery])
 
   const handleCopyLink = async () => {
     if (!trip) return
@@ -211,14 +292,34 @@ export function TripDetail() {
                                   </p>
                                 )}
                               </div>
-                              <div>
+                              <div className="flex items-center gap-2">
                                 {item.booking_confirmed ? (
                                   <span className="flex items-center gap-1 text-sm text-green-600">
                                     <Check className="h-4 w-4" />
                                     Booked
                                   </span>
                                 ) : (
-                                  <span className="text-sm text-muted-foreground">Pending</span>
+                                  <>
+                                    {item.booking_url ? (
+                                      <a href={item.booking_url} target="_blank" rel="noopener noreferrer">
+                                        <Button variant="outline" size="sm" className="gap-1">
+                                          View Booking
+                                          <ExternalLink className="h-3 w-3" />
+                                        </Button>
+                                      </a>
+                                    ) : (
+                                      <a
+                                        href={getItemBookingLink(item, trip) || '#'}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <Button variant="outline" size="sm" className="gap-1">
+                                          Find & Book
+                                          <ExternalLink className="h-3 w-3" />
+                                        </Button>
+                                      </a>
+                                    )}
+                                  </>
                                 )}
                               </div>
                             </CardContent>
@@ -233,6 +334,240 @@ export function TripDetail() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Book Travel */}
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Search className="h-5 w-5" />
+                    Book Travel
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowSearchSettings(!showSearchSettings)}
+                    className="gap-1 text-xs"
+                  >
+                    <Settings2 className="h-4 w-4" />
+                    {showSearchSettings ? 'Hide' : 'Edit'}
+                  </Button>
+                </div>
+                <CardDescription>Find and book flights, hotels, and more</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Editable Search Parameters */}
+                {showSearchSettings && (
+                  <div className="space-y-3 rounded-lg border bg-white p-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="searchDepartDate" className="text-xs">Depart</Label>
+                        <Input
+                          id="searchDepartDate"
+                          type="date"
+                          value={searchDepartDate}
+                          onChange={(e) => setSearchDepartDate(e.target.value)}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="searchReturnDate" className="text-xs">Return</Label>
+                        <Input
+                          id="searchReturnDate"
+                          type="date"
+                          value={searchReturnDate}
+                          onChange={(e) => setSearchReturnDate(e.target.value)}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="searchTravelers" className="text-xs">Travelers</Label>
+                      <Input
+                        id="searchTravelers"
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={searchTravelersInput}
+                        onChange={(e) => setSearchTravelersInput(e.target.value)}
+                        onBlur={() => {
+                          // Ensure valid value on blur
+                          const num = parseInt(searchTravelersInput)
+                          if (!num || num < 1) setSearchTravelersInput('1')
+                          else if (num > 10) setSearchTravelersInput('10')
+                        }}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1 relative">
+                      <Label htmlFor="searchOrigin" className="text-xs">Origin Airport (optional)</Label>
+                      <Input
+                        id="searchOrigin"
+                        type="text"
+                        placeholder="Search airports (e.g., NYC, LAX)"
+                        value={originQuery}
+                        onChange={(e) => {
+                          setOriginQuery(e.target.value)
+                          if (!e.target.value) setSearchOrigin('')
+                        }}
+                        onFocus={() => originResults.length > 0 && setShowOriginDropdown(true)}
+                        className="h-8 text-xs"
+                      />
+                      {searchOrigin && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Selected: {searchOrigin}
+                        </p>
+                      )}
+                      {showOriginDropdown && originResults.length > 0 && (
+                        <div className="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-lg">
+                          <ul className="max-h-40 overflow-auto py-1">
+                            {originResults.map((airport) => (
+                              <li
+                                key={airport.code}
+                                onClick={() => {
+                                  setSearchOrigin(airport.code)
+                                  setOriginQuery(formatAirport(airport))
+                                  setShowOriginDropdown(false)
+                                }}
+                                className="cursor-pointer px-3 py-2 text-xs hover:bg-accent"
+                              >
+                                <span className="font-medium">{airport.code}</span> - {airport.city}, {airport.country}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="searchDestination" className="text-xs">Destination</Label>
+                      <Input
+                        id="searchDestination"
+                        type="text"
+                        value={searchDestination}
+                        onChange={(e) => setSearchDestination(e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Current Search Summary */}
+                {!showSearchSettings && (
+                  <div className="text-xs text-muted-foreground space-y-1 pb-2">
+                    <p>{searchOrigin ? `${searchOrigin} → ` : ''}{searchDestination.split(',')[0]}</p>
+                    <p>{searchDepartDate} - {searchReturnDate} • {searchTravelers} traveler{searchTravelers !== 1 ? 's' : ''}</p>
+                  </div>
+                )}
+
+                {/* Flights */}
+                <div>
+                  <p className="mb-1 text-sm font-medium flex items-center gap-2">
+                    <Plane className="h-4 w-4" /> Flights
+                  </p>
+                  <p className="mb-2 text-xs text-muted-foreground">
+                    Each traveler books individually
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(getFlightSearchLinks({
+                      originCode: searchOrigin || undefined,
+                      destination: searchDestination,
+                      departDate: searchDepartDate,
+                      returnDate: searchReturnDate,
+                      adults: 1, // Always 1 since each person books their own
+                    })).map(([name, url]) => {
+                      const displayName = name === 'googleFlights' ? 'Google Flights'
+                        : name === 'kayak' ? 'Kayak'
+                        : name === 'skyscanner' ? 'Skyscanner'
+                        : name.charAt(0).toUpperCase() + name.slice(1)
+                      return (
+                        <a key={name} href={url} target="_blank" rel="noopener noreferrer">
+                          <Button variant="outline" size="sm" className="gap-1 text-xs">
+                            {displayName}
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        </a>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Hotels */}
+                <div>
+                  <p className="mb-2 text-sm font-medium flex items-center gap-2">
+                    <Hotel className="h-4 w-4" /> Hotels
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(getHotelSearchLinks({
+                      destination: searchDestination,
+                      checkIn: searchDepartDate,
+                      checkOut: searchReturnDate,
+                      guests: searchTravelers,
+                    })).map(([name, url]) => (
+                      <a key={name} href={url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="gap-1 text-xs">
+                          {name === 'bookingCom' ? 'Booking' : name === 'hotelsCom' ? 'Hotels.com' : 'Airbnb'}
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Experiences */}
+                <div>
+                  <p className="mb-2 text-sm font-medium flex items-center gap-2">
+                    <Compass className="h-4 w-4" /> Experiences
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(getExperienceSearchLinks({
+                      destination: searchDestination,
+                      date: searchDepartDate,
+                    })).map(([name, url]) => (
+                      <a key={name} href={url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="gap-1 text-xs">
+                          {name === 'getYourGuide' ? 'GetYourGuide' : 'Viator'}
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Restaurants */}
+                <div>
+                  <p className="mb-2 text-sm font-medium flex items-center gap-2">
+                    <Utensils className="h-4 w-4" /> Restaurants
+                  </p>
+                  <a
+                    href={getOpenTableUrl(searchDestination, searchDepartDate, searchTravelers)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" size="sm" className="gap-1 text-xs">
+                      OpenTable
+                      <ExternalLink className="h-3 w-3" />
+                    </Button>
+                  </a>
+                </div>
+
+                {/* Car Rental */}
+                <div>
+                  <p className="mb-2 text-sm font-medium flex items-center gap-2">
+                    <Car className="h-4 w-4" /> Car Rental
+                  </p>
+                  <a
+                    href={getRentalCarsUrl(searchDestination, searchDepartDate, searchReturnDate)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" size="sm" className="gap-1 text-xs">
+                      Rentalcars.com
+                      <ExternalLink className="h-3 w-3" />
+                    </Button>
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Trip Info */}
             <Card>
               <CardHeader>
@@ -240,12 +575,21 @@ export function TripDetail() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
+                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Destination</p>
+                    <p className="font-medium">{searchDestination.split(',')[0]}</p>
+                    {searchOrigin && (
+                      <p className="text-xs text-muted-foreground">From: {searchOrigin}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
                   <Calendar className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm text-muted-foreground">Dates</p>
                     <p className="font-medium">
-                      {new Date(trip.start_date).toLocaleDateString()} -{' '}
-                      {new Date(trip.end_date).toLocaleDateString()}
+                      {searchDepartDate} - {searchReturnDate}
                     </p>
                   </div>
                 </div>
@@ -253,7 +597,7 @@ export function TripDetail() {
                   <Users className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm text-muted-foreground">Travelers</p>
-                    <p className="font-medium">{trip.preferences.num_travelers} people</p>
+                    <p className="font-medium">{searchTravelers} {searchTravelers === 1 ? 'person' : 'people'}</p>
                   </div>
                 </div>
               </CardContent>

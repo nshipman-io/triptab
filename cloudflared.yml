@@ -1,0 +1,19 @@
+tunnel: e8d78369-d0b4-46ec-b08a-7198c183cc5b
+credentials-file: ~/.cloudflared/e8d78369-d0b4-46ec-b08a-7198c183cc5b.json
+
+ingress:
+  # API subdomain -> backend
+  - hostname: api.triptab.io
+    service: http://localhost:8000
+    originRequest:
+      noTLSVerify: true
+
+  # Main domain -> frontend (with WebSocket support for Vite HMR)
+  - hostname: triptab.io
+    service: http://localhost:5173
+    originRequest:
+      noTLSVerify: true
+      httpHostHeader: "localhost:5173"
+
+  # Catch-all (required)
+  - service: http_status:404
