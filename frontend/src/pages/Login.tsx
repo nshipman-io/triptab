@@ -17,7 +17,6 @@ export function Login() {
 
   const from = (location.state as { from?: string })?.from || '/dashboard'
   const message = (location.state as { message?: string })?.message
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
