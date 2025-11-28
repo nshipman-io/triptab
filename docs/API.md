@@ -1,6 +1,6 @@
 # API Documentation
 
-The Triply API is a RESTful API built with FastAPI. Full interactive documentation is available at `/api/v1/docs` when running the server.
+The Triptab API is a RESTful API built with FastAPI. Full interactive documentation is available at `/api/v1/docs` when running the server.
 
 ## Base URL
 

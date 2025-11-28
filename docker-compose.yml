@@ -1,11 +1,11 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: triply-db
+    container_name: triptab-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: triply
+      POSTGRES_DB: triptab
     ports:
       - "5432:5432"
     volumes:
@@ -20,12 +20,12 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: triply-backend
+    container_name: triptab-backend
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/triply
-      DATABASE_URL_SYNC: postgresql://postgres:postgres@db:5432/triply
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/triptab
+      DATABASE_URL_SYNC: postgresql://postgres:postgres@db:5432/triptab
       SECRET_KEY: dev-secret-key-change-in-production
       CORS_ORIGINS: '["http://localhost:5173", "http://localhost:3000", "http://localhost"]'
     depends_on:
@@ -40,7 +40,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: development
-    container_name: triply-frontend
+    container_name: triptab-frontend
     ports:
       - "5173:5173"
     environment:

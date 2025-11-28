@@ -4,13 +4,13 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     # App settings
-    APP_NAME: str = "Triply API"
+    APP_NAME: str = "Triptab API"
     DEBUG: bool = True
     API_V1_PREFIX: str = "/api/v1"
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/triply"
-    DATABASE_URL_SYNC: str = "postgresql://postgres:postgres@localhost:5432/triply"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/triptab"
+    DATABASE_URL_SYNC: str = "postgresql://postgres:postgres@localhost:5432/triptab"
 
     # JWT
     SECRET_KEY: str = "your-super-secret-key-change-in-production"

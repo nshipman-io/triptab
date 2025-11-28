@@ -1,6 +1,6 @@
-# Triply - Collaborative Travel Planning
+# Triptab - Collaborative Travel Planning
 
-Triply is a travel planning application that helps users create, manage, and share trip itineraries with friends and family.
+Triptab is a travel planning application that helps users create, manage, and share trip itineraries with friends and family.
 
 ## Quick Start
 
@@ -45,7 +45,7 @@ docker-compose up --build
 ## Project Structure
 
 ```
-triply/
+triptab/
 ├── frontend/                 # React application
 │   ├── src/
 │   │   ├── components/       # UI and feature components

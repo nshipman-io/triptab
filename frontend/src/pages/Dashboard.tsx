@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plane, Plus, Calendar, Users, MapPin, LogOut } from 'lucide-react'
+import { Globe, Plus, Calendar, Users, MapPin, LogOut, Plane } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { Trip, User } from '@/types'
 
@@ -51,8 +51,8 @@ export function Dashboard() {
       <header className="border-b bg-white">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <Plane className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">Triply</span>
+            <Globe className="h-6 w-6 text-primary" />
+            <span className="text-xl font-bold">Triptab</span>
           </Link>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">

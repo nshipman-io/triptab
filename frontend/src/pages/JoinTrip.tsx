@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plane, Calendar, Users, MapPin } from 'lucide-react'
+import { Globe, Calendar, Users, MapPin } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { Trip } from '@/types'
 
@@ -61,8 +61,8 @@ export function JoinTrip() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <Link to="/" className="mb-4 flex items-center justify-center gap-2">
-            <Plane className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">Triply</span>
+            <Globe className="h-8 w-8 text-primary" />
+            <span className="text-2xl font-bold">Triptab</span>
           </Link>
           {error ? (
             <>

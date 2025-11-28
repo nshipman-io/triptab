@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plane, Users, Calendar, Share2 } from 'lucide-react'
+import { Globe, Users, Calendar, Share2, Plane } from 'lucide-react'
 
 export function Home() {
   return (
@@ -10,8 +10,8 @@ export function Home() {
       <header className="container mx-auto px-4 py-6">
         <nav className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Plane className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">Triply</span>
+            <Globe className="h-8 w-8 text-primary" />
+            <span className="text-2xl font-bold">Triptab</span>
           </div>
           <div className="flex items-center gap-4">
             <Link to="/login">
@@ -34,7 +34,7 @@ export function Home() {
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-600">
             Create personalized travel itineraries, invite friends and family, and keep everyone
-            on the same page. From flights to experiences, Triply has you covered.
+            on the same page. From flights to experiences, Triptab has you covered.
           </p>
           <div className="mt-10 flex items-center justify-center gap-4">
             <Link to="/plan">
@@ -120,7 +120,7 @@ export function Home() {
             <CardHeader>
               <CardTitle className="text-3xl">Ready to plan your next adventure?</CardTitle>
               <CardDescription className="text-primary-foreground/80">
-                Join thousands of travelers who plan smarter with Triply
+                Join thousands of travelers who plan smarter with Triptab
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -136,7 +136,7 @@ export function Home() {
 
       <footer className="border-t py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>&copy; 2024 Triply. Plan trips together, effortlessly.</p>
+          <p>&copy; 2024 Triptab. Plan trips together, effortlessly.</p>
         </div>
       </footer>
     </div>

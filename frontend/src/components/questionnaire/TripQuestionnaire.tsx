@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
+import { PlacesAutocomplete } from '@/components/ui/places-autocomplete'
 import {
   User, Users, Heart, Home,
   DollarSign, Wallet, Crown,
@@ -50,6 +51,7 @@ export function TripQuestionnaire() {
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [preferences, setPreferences] = useState<Partial<TripPreferences>>({
     travel_type: undefined,
     destination: '',
@@ -62,6 +64,19 @@ export function TripQuestionnaire() {
   })
 
   const progress = ((currentStep + 1) / STEPS.length) * 100
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        await api.getCurrentUser()
+        setIsAuthenticated(true)
+      } catch {
+        setIsAuthenticated(false)
+        navigate('/login', { state: { from: '/plan', message: 'Please log in to plan a trip' } })
+      }
+    }
+    checkAuth()
+  }, [navigate])
 
   const handleNext = () => {
     if (currentStep < STEPS.length - 1) {
@@ -142,11 +157,10 @@ export function TripQuestionnaire() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="destination">Destination</Label>
-              <Input
-                id="destination"
-                placeholder="e.g., Paris, Tokyo, New York"
-                value={preferences.destination}
-                onChange={(e) => setPreferences({ ...preferences, destination: e.target.value })}
+              <PlacesAutocomplete
+                value={preferences.destination || ''}
+                onChange={(value) => setPreferences({ ...preferences, destination: value })}
+                placeholder="Search for a city..."
               />
             </div>
             {(preferences.travel_type === 'friends' || preferences.travel_type === 'family') && (
@@ -312,6 +326,18 @@ export function TripQuestionnaire() {
       default:
         return false
     }
+  }
+
+  if (isAuthenticated === null) {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <Card>
+          <CardContent className="flex items-center justify-center py-12">
+            <p className="text-muted-foreground">Loading...</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (

@@ -1,6 +1,6 @@
 # Development Guide
 
-This guide covers setting up your development environment, running the application, and contributing to the codebase.
+This guide covers setting up your development environment, running Triptab, and contributing to the codebase.
 
 ## Prerequisites
 
@@ -15,7 +15,7 @@ The fastest way to get started:
 
 ```bash
 # Clone and enter the project
-cd triply
+cd triptab
 
 # Start all services
 docker-compose up --build
@@ -62,7 +62,7 @@ docker-compose up -d db
 Or install PostgreSQL locally and create the database:
 
 ```sql
-CREATE DATABASE triply;
+CREATE DATABASE triptab;
 ```
 
 ### Backend Setup
@@ -112,8 +112,8 @@ Create `backend/.env`:
 
 ```env
 # Database
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/triply
-DATABASE_URL_SYNC=postgresql://postgres:postgres@localhost:5432/triply
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/triptab
+DATABASE_URL_SYNC=postgresql://postgres:postgres@localhost:5432/triptab
 
 # Security
 SECRET_KEY=your-secret-key-at-least-32-characters
@@ -366,7 +366,7 @@ docker-compose ps
 docker-compose logs db
 
 # Connect directly to database
-docker-compose exec db psql -U postgres -d triply
+docker-compose exec db psql -U postgres -d triptab
 ```
 
 ### Port Already in Use
@@ -410,9 +410,9 @@ docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
 ### Environment Variables for Production
 
 ```env
-POSTGRES_USER=triply_user
+POSTGRES_USER=triptab_user
 POSTGRES_PASSWORD=<strong-password>
-POSTGRES_DB=triply_prod
+POSTGRES_DB=triptab_prod
 SECRET_KEY=<32+-character-secret>
 CORS_ORIGINS=["https://yourdomain.com"]
 DEBUG=false
