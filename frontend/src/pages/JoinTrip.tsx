@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Globe, Calendar, Users, MapPin } from 'lucide-react'
+import { Calendar, Users, MapPin } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { Trip } from '@/types'
 
@@ -50,62 +50,66 @@ export function JoinTrip() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-50 to-white">
-        <div className="text-muted-foreground">Loading trip...</div>
+      <div className="flex min-h-screen items-center justify-center bg-sand">
+        <div className="text-ink-light">Loading trip...</div>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-50 to-white p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <Link to="/" className="mb-4 flex items-center justify-center gap-2">
-            <Globe className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">Triptab</span>
+    <div className="flex min-h-screen items-center justify-center bg-sand p-4">
+      <Card className="w-full max-w-md p-8">
+        <CardHeader className="text-center p-0 mb-8">
+          <Link to="/" className="mb-6 flex items-center justify-center gap-2 font-serif text-2xl font-medium text-forest tracking-tight">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+            Triptab
           </Link>
           {error ? (
             <>
-              <CardTitle className="text-destructive">Oops!</CardTitle>
-              <CardDescription>{error}</CardDescription>
+              <CardTitle className="text-2xl font-serif text-destructive">Oops!</CardTitle>
+              <CardDescription className="text-ink-light mt-2">{error}</CardDescription>
             </>
           ) : trip ? (
             <>
-              <CardTitle>You're invited!</CardTitle>
-              <CardDescription>Someone wants you to join their trip</CardDescription>
+              <CardTitle className="text-2xl font-serif">You're invited!</CardTitle>
+              <CardDescription className="text-ink-light mt-2">Someone wants you to join their trip</CardDescription>
             </>
           ) : null}
         </CardHeader>
 
         {trip && !error && (
           <>
-            <CardContent>
-              <div className="rounded-lg bg-muted/50 p-6">
-                <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-                  <MapPin className="h-5 w-5 text-primary" />
+            <CardContent className="p-0">
+              <div className="rounded-xl bg-sand p-6">
+                <h3 className="mb-4 flex items-center gap-2 text-lg font-serif">
+                  <MapPin className="h-5 w-5 text-terracotta" />
                   {trip.name}
                 </h3>
-                <p className="mb-4 text-muted-foreground">{trip.destination}</p>
-                <div className="flex items-center gap-6 text-sm">
+                <p className="mb-4 text-ink-light">{trip.destination}</p>
+                <div className="flex items-center gap-6 text-sm text-ink-light">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <Calendar className="h-4 w-4" />
                     <span>
                       {new Date(trip.start_date).toLocaleDateString()} -{' '}
                       {new Date(trip.end_date).toLocaleDateString()}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <Users className="h-4 w-4" />
                     <span>{trip.preferences.num_travelers} travelers</span>
                   </div>
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col gap-4">
+            <CardFooter className="flex flex-col gap-4 p-0 mt-8">
               <Button className="w-full" onClick={handleJoin} disabled={joining}>
                 {joining ? 'Joining...' : 'Join This Trip'}
               </Button>
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-center text-sm text-ink-light">
                 By joining, you'll be able to view and edit the trip itinerary
               </p>
             </CardFooter>
@@ -113,7 +117,7 @@ export function JoinTrip() {
         )}
 
         {error && (
-          <CardFooter>
+          <CardFooter className="p-0 mt-8">
             <Link to="/" className="w-full">
               <Button variant="outline" className="w-full">
                 Go to Homepage

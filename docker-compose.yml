@@ -28,6 +28,7 @@ services:
       DATABASE_URL_SYNC: postgresql://postgres:postgres@db:5432/triptab
       SECRET_KEY: dev-secret-key-change-in-production
       CORS_ORIGINS: '["http://localhost:5173", "http://localhost:3000", "https://triptab.io", "http://triptab.io"]'
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
     depends_on:
       db:
         condition: service_healthy

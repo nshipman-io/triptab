@@ -178,40 +178,33 @@ export function getKayakFlightUrl(params: FlightSearchParams): string {
 /**
  * Booking.com hotel search
  * Popular affiliate program (25-40% commission)
+ * URL format: /searchresults.html?ss={destination}&checkin={date}&checkout={date}
  */
 export function getBookingComUrl(params: HotelSearchParams): string {
   const { destination, checkIn, checkOut, guests = 2, rooms = 1 } = params
-  const dest = encodeDestination(destination)
+  // Extract city name only
+  const dest = destination.split(',')[0].trim()
+  const checkinDate = formatDateISO(checkIn)
+  const checkoutDate = formatDateISO(checkOut)
 
-  const url = new URL('https://www.booking.com/searchresults.html')
-  url.searchParams.set('ss', dest)
-  url.searchParams.set('checkin', formatDateISO(checkIn))
-  url.searchParams.set('checkout', formatDateISO(checkOut))
-  url.searchParams.set('group_adults', guests.toString())
-  url.searchParams.set('no_rooms', rooms.toString())
-  url.searchParams.set('group_children', '0')
-  // Add affiliate ID here when you have one: url.searchParams.set('aid', 'YOUR_AFFILIATE_ID')
-
-  return url.toString()
+  // Build URL manually to avoid encoding issues
+  return `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(dest)}&checkin=${checkinDate}&checkout=${checkoutDate}&group_adults=${guests}&no_rooms=${rooms}&group_children=0`
 }
 
 /**
  * Hotels.com search
  * Part of Expedia affiliate network
+ * URL format: /Hotel-Search?destination={dest}&startDate={date}&endDate={date}
  */
 export function getHotelsComUrl(params: HotelSearchParams): string {
   const { destination, checkIn, checkOut, guests = 2, rooms = 1 } = params
-  const dest = encodeDestination(destination)
+  // Extract city name only
+  const dest = destination.split(',')[0].trim()
+  const startDate = formatDateISO(checkIn)
+  const endDate = formatDateISO(checkOut)
 
-  const url = new URL('https://www.hotels.com/search.do')
-  url.searchParams.set('q-destination', dest)
-  url.searchParams.set('q-check-in', formatDateISO(checkIn))
-  url.searchParams.set('q-check-out', formatDateISO(checkOut))
-  url.searchParams.set('q-rooms', rooms.toString())
-  url.searchParams.set('q-room-0-adults', guests.toString())
-  url.searchParams.set('q-room-0-children', '0')
-
-  return url.toString()
+  // Build URL manually - Hotels.com uses both startDate/endDate and d1/d2
+  return `https://www.hotels.com/Hotel-Search?destination=${encodeURIComponent(dest)}&startDate=${startDate}&endDate=${endDate}&d1=${startDate}&d2=${endDate}&adults=${guests}&rooms=${rooms}&sort=RECOMMENDED`
 }
 
 /**

@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Globe } from 'lucide-react'
 import { api } from '@/lib/api'
 
 export function Register() {
@@ -48,25 +47,29 @@ export function Register() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-50 to-white p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <Link to="/" className="mb-4 flex items-center justify-center gap-2">
-            <Globe className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">Triptab</span>
+    <div className="flex min-h-screen items-center justify-center bg-sand p-4">
+      <Card className="w-full max-w-md p-8">
+        <CardHeader className="text-center p-0 mb-8">
+          <Link to="/" className="mb-6 flex items-center justify-center gap-2 font-serif text-2xl font-medium text-forest tracking-tight">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+            Triptab
           </Link>
-          <CardTitle>Create an account</CardTitle>
-          <CardDescription>Start planning your next adventure</CardDescription>
+          <CardTitle className="text-2xl font-serif">Create an account</CardTitle>
+          <CardDescription className="text-ink-light mt-2">Start planning your next adventure</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5 p-0">
             {error && (
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              <div className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">
                 {error}
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name" className="text-xs font-semibold text-ink-light uppercase tracking-wider">Name</Label>
               <Input
                 id="name"
                 type="text"
@@ -77,7 +80,7 @@ export function Register() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-xs font-semibold text-ink-light uppercase tracking-wider">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -88,7 +91,7 @@ export function Register() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-xs font-semibold text-ink-light uppercase tracking-wider">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -99,7 +102,7 @@ export function Register() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="text-xs font-semibold text-ink-light uppercase tracking-wider">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -109,13 +112,13 @@ export function Register() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4">
+          <CardFooter className="flex flex-col gap-4 p-0 mt-8">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Creating account...' : 'Create account'}
             </Button>
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="text-center text-sm text-ink-light">
               Already have an account?{' '}
-              <Link to="/login" className="text-primary hover:underline">
+              <Link to="/login" className="text-terracotta hover:underline font-medium">
                 Sign in
               </Link>
             </p>

@@ -158,6 +158,128 @@ class ApiClient {
       method: 'DELETE',
     })
   }
+
+  // Checklist endpoints
+  async getChecklists(tripId: string) {
+    return this.request(`/trips/${tripId}/checklists`)
+  }
+
+  async createChecklist(tripId: string, data: { name: string; type: string; order?: number }) {
+    return this.request(`/trips/${tripId}/checklists`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateChecklist(tripId: string, checklistId: string, data: Record<string, unknown>) {
+    return this.request(`/trips/${tripId}/checklists/${checklistId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteChecklist(tripId: string, checklistId: string) {
+    return this.request(`/trips/${tripId}/checklists/${checklistId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async createChecklistItem(tripId: string, checklistId: string, data: { content: string; order?: number }) {
+    return this.request(`/trips/${tripId}/checklists/${checklistId}/items`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateChecklistItem(tripId: string, checklistId: string, itemId: string, data: Record<string, unknown>) {
+    return this.request(`/trips/${tripId}/checklists/${checklistId}/items/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteChecklistItem(tripId: string, checklistId: string, itemId: string) {
+    return this.request(`/trips/${tripId}/checklists/${checklistId}/items/${itemId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async reorderChecklistItems(tripId: string, checklistId: string, itemIds: string[]) {
+    return this.request(`/trips/${tripId}/checklists/${checklistId}/reorder`, {
+      method: 'PUT',
+      body: JSON.stringify({ item_ids: itemIds }),
+    })
+  }
+
+  // Expense endpoints
+  async getExpenses(tripId: string) {
+    return this.request(`/trips/${tripId}/expenses`)
+  }
+
+  async createExpense(tripId: string, data: Record<string, unknown>) {
+    return this.request(`/trips/${tripId}/expenses`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateExpense(tripId: string, expenseId: string, data: Record<string, unknown>) {
+    return this.request(`/trips/${tripId}/expenses/${expenseId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteExpense(tripId: string, expenseId: string) {
+    return this.request(`/trips/${tripId}/expenses/${expenseId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async getExpenseSummary(tripId: string) {
+    return this.request(`/trips/${tripId}/expenses/summary`)
+  }
+
+  async getSettlements(tripId: string) {
+    return this.request(`/trips/${tripId}/expenses/settlements`)
+  }
+
+  async settleExpenseSplit(tripId: string, expenseId: string, splitId: string) {
+    return this.request(`/trips/${tripId}/expenses/${expenseId}/settle?split_id=${splitId}`, {
+      method: 'POST',
+    })
+  }
+
+  // Import endpoints
+  async parseImport(tripId: string, emailContent: string) {
+    return this.request(`/trips/${tripId}/import/parse`, {
+      method: 'POST',
+      body: JSON.stringify({ email_content: emailContent }),
+    })
+  }
+
+  async confirmImport(tripId: string, parsedData: Record<string, unknown>, adjustments?: Record<string, unknown>) {
+    return this.request(`/trips/${tripId}/import/confirm`, {
+      method: 'POST',
+      body: JSON.stringify({ parsed_data: parsedData, adjustments }),
+    })
+  }
+
+  async getImportHistory(tripId: string) {
+    return this.request(`/trips/${tripId}/import/history`)
+  }
+
+  // Recommendations endpoints
+  async getRecommendations(tripId: string, category: string = 'activities', count: number = 5) {
+    return this.request(`/trips/${tripId}/recommendations?category=${category}&count=${count}`)
+  }
+
+  async addRecommendationToItinerary(tripId: string, recommendation: Record<string, unknown>, date: string, time?: string) {
+    return this.request(`/trips/${tripId}/recommendations/add`, {
+      method: 'POST',
+      body: JSON.stringify({ recommendation, date, time }),
+    })
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL)

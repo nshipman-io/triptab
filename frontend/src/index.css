@@ -1,29 +1,136 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: hsl(0 0% 100%);
-  --color-foreground: hsl(222.2 84% 4.9%);
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(222.2 84% 4.9%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(222.2 84% 4.9%);
-  --color-primary: hsl(221.2 83.2% 53.3%);
-  --color-primary-foreground: hsl(210 40% 98%);
-  --color-secondary: hsl(210 40% 96.1%);
-  --color-secondary-foreground: hsl(222.2 47.4% 11.2%);
-  --color-muted: hsl(210 40% 96.1%);
-  --color-muted-foreground: hsl(215.4 16.3% 46.9%);
-  --color-accent: hsl(210 40% 96.1%);
-  --color-accent-foreground: hsl(222.2 47.4% 11.2%);
-  --color-destructive: hsl(0 84.2% 60.2%);
-  --color-destructive-foreground: hsl(210 40% 98%);
-  --color-border: hsl(214.3 31.8% 91.4%);
-  --color-input: hsl(214.3 31.8% 91.4%);
-  --color-ring: hsl(221.2 83.2% 53.3%);
-  --radius: 0.5rem;
+  /* Drift Color Palette */
+  --color-sand: #F5F0E8;
+  --color-sand-dark: #E8E0D4;
+  --color-terracotta: #C4735B;
+  --color-terracotta-light: #D4917C;
+  --color-forest: #2D4739;
+  --color-forest-light: #3D5A49;
+  --color-cream: #FFFDF9;
+  --color-ink: #1A1A1A;
+  --color-ink-light: #4A4A4A;
+  --color-golden: #D4A853;
+  --color-golden-light: #E8C97A;
+
+  /* Semantic colors for shadcn/ui compatibility */
+  --color-background: #F5F0E8;
+  --color-foreground: #1A1A1A;
+  --color-card: #FFFDF9;
+  --color-card-foreground: #1A1A1A;
+  --color-popover: #FFFDF9;
+  --color-popover-foreground: #1A1A1A;
+  --color-primary: #2D4739;
+  --color-primary-foreground: #FFFDF9;
+  --color-secondary: #F5F0E8;
+  --color-secondary-foreground: #1A1A1A;
+  --color-muted: #E8E0D4;
+  --color-muted-foreground: #4A4A4A;
+  --color-accent: #C4735B;
+  --color-accent-foreground: #FFFDF9;
+  --color-destructive: #EF4444;
+  --color-destructive-foreground: #F8FAFC;
+  --color-border: #E8E0D4;
+  --color-input: #E8E0D4;
+  --color-ring: #C4735B;
+
+  /* Radius */
+  --radius: 0.75rem;
+
+  /* Fonts */
+  --font-sans: 'DM Sans', sans-serif;
+  --font-serif: 'Fraunces', serif;
 }
 
-body {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
+/* Base styles */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay for that organic feel */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.03;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+    z-index: 9999;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Keyframe animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-20px) rotate(2deg); }
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.1) rotate(5deg); }
+}
+
+@keyframes dropIn {
+  0% { transform: rotate(-45deg) translateY(-20px); opacity: 0; }
+  100% { transform: rotate(-45deg) translateY(0); opacity: 1; }
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .font-serif {
+    font-family: 'Fraunces', serif;
+  }
+
+  .font-sans {
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s ease forwards;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-sparkle {
+    animation: sparkle 2s ease-in-out infinite;
+  }
 }

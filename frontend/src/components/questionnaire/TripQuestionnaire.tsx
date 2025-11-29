@@ -131,22 +131,22 @@ export function TripQuestionnaire() {
                   num_travelers: type.value === 'solo' ? 1 : type.value === 'couple' ? 2 : preferences.num_travelers || 2
                 })}
                 className={cn(
-                  "flex flex-col items-center gap-2 rounded-lg border-2 p-6 transition-all hover:border-primary",
+                  "flex flex-col items-center gap-2 rounded-2xl border-2 p-6 transition-all hover:border-terracotta bg-sand",
                   preferences.travel_type === type.value
-                    ? "border-primary bg-primary/5"
-                    : "border-border"
+                    ? "border-terracotta bg-cream"
+                    : "border-sand-dark"
                 )}
               >
                 <div className={cn(
                   "rounded-full p-3",
                   preferences.travel_type === type.value
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                    ? "bg-forest text-cream"
+                    : "bg-sand-dark"
                 )}>
                   {type.icon}
                 </div>
                 <span className="font-medium">{type.label}</span>
-                <span className="text-sm text-muted-foreground">{type.description}</span>
+                <span className="text-sm text-ink-light">{type.description}</span>
               </button>
             ))}
           </div>
@@ -212,22 +212,22 @@ export function TripQuestionnaire() {
                 key={budget.value}
                 onClick={() => setPreferences({ ...preferences, budget_range: budget.value })}
                 className={cn(
-                  "flex flex-col items-center gap-2 rounded-lg border-2 p-6 transition-all hover:border-primary",
+                  "flex flex-col items-center gap-2 rounded-2xl border-2 p-6 transition-all hover:border-terracotta bg-sand",
                   preferences.budget_range === budget.value
-                    ? "border-primary bg-primary/5"
-                    : "border-border"
+                    ? "border-terracotta bg-cream"
+                    : "border-sand-dark"
                 )}
               >
                 <div className={cn(
                   "rounded-full p-3",
                   preferences.budget_range === budget.value
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                    ? "bg-forest text-cream"
+                    : "bg-sand-dark"
                 )}>
                   {budget.icon}
                 </div>
                 <span className="font-medium">{budget.label}</span>
-                <span className="text-sm text-muted-foreground">{budget.description}</span>
+                <span className="text-sm text-ink-light">{budget.description}</span>
               </button>
             ))}
           </div>
@@ -236,7 +236,7 @@ export function TripQuestionnaire() {
       case 'activities':
         return (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Select all that interest you</p>
+            <p className="text-sm text-ink-light">Select all that interest you</p>
             <div className="grid gap-4 sm:grid-cols-3">
               {ACTIVITIES.map((activity) => {
                 const isSelected = preferences.activities?.includes(activity.value)
@@ -245,13 +245,13 @@ export function TripQuestionnaire() {
                     key={activity.value}
                     onClick={() => toggleActivity(activity.value)}
                     className={cn(
-                      "flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all hover:border-primary",
-                      isSelected ? "border-primary bg-primary/5" : "border-border"
+                      "flex flex-col items-center gap-2 rounded-2xl border-2 p-4 transition-all hover:border-terracotta bg-sand",
+                      isSelected ? "border-terracotta bg-cream" : "border-sand-dark"
                     )}
                   >
                     <div className={cn(
                       "rounded-full p-3",
-                      isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
+                      isSelected ? "bg-forest text-cream" : "bg-sand-dark"
                     )}>
                       {activity.icon}
                     </div>
@@ -266,29 +266,29 @@ export function TripQuestionnaire() {
       case 'summary':
         return (
           <div className="space-y-6">
-            <div className="rounded-lg bg-muted/50 p-6">
-              <h3 className="mb-4 text-lg font-semibold">Trip to {preferences.destination}</h3>
+            <div className="rounded-2xl bg-sand p-6">
+              <h3 className="mb-4 text-lg font-serif">Trip to {preferences.destination}</h3>
               <dl className="grid gap-3 text-sm sm:grid-cols-2">
                 <div>
-                  <dt className="text-muted-foreground">Travel Type</dt>
+                  <dt className="text-ink-light">Travel Type</dt>
                   <dd className="font-medium capitalize">{preferences.travel_type}</dd>
                 </div>
                 <div>
-                  <dt className="text-muted-foreground">Travelers</dt>
+                  <dt className="text-ink-light">Travelers</dt>
                   <dd className="font-medium">{preferences.num_travelers}</dd>
                 </div>
                 <div>
-                  <dt className="text-muted-foreground">Dates</dt>
+                  <dt className="text-ink-light">Dates</dt>
                   <dd className="font-medium">
                     {new Date(preferences.start_date!).toLocaleDateString()} - {new Date(preferences.end_date!).toLocaleDateString()}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-muted-foreground">Budget</dt>
+                  <dt className="text-ink-light">Budget</dt>
                   <dd className="font-medium capitalize">{preferences.budget_range}</dd>
                 </div>
                 <div className="sm:col-span-2">
-                  <dt className="text-muted-foreground">Activities</dt>
+                  <dt className="text-ink-light">Activities</dt>
                   <dd className="font-medium capitalize">
                     {preferences.activities?.join(', ') || 'None selected'}
                   </dd>
@@ -331,9 +331,9 @@ export function TripQuestionnaire() {
   if (isAuthenticated === null) {
     return (
       <div className="mx-auto max-w-2xl">
-        <Card>
-          <CardContent className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">Loading...</p>
+        <Card className="p-10">
+          <CardContent className="flex items-center justify-center py-12 p-0">
+            <p className="text-ink-light">Loading...</p>
           </CardContent>
         </Card>
       </div>
@@ -342,16 +342,16 @@ export function TripQuestionnaire() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Card>
-        <CardHeader>
-          <div className="mb-4">
+      <Card className="p-10">
+        <CardHeader className="p-0 mb-8">
+          <div className="mb-6">
             <Progress value={progress} className="h-2" />
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-ink-light">
               Step {currentStep + 1} of {STEPS.length}
             </p>
           </div>
-          <CardTitle>{STEPS[currentStep].title}</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-serif">{STEPS[currentStep].title}</CardTitle>
+          <CardDescription className="text-ink-light mt-2">
             {currentStep === 0 && "Let's start by understanding your travel style"}
             {currentStep === 1 && "Tell us where you'd like to explore"}
             {currentStep === 2 && "Pick your travel dates"}
@@ -360,8 +360,8 @@ export function TripQuestionnaire() {
             {currentStep === 5 && "Review your preferences before we create your trip"}
           </CardDescription>
         </CardHeader>
-        <CardContent>{renderStep()}</CardContent>
-        <CardFooter className="flex justify-between">
+        <CardContent className="p-0">{renderStep()}</CardContent>
+        <CardFooter className="flex justify-between p-0 mt-8">
           <Button
             variant="outline"
             onClick={handleBack}
@@ -371,7 +371,7 @@ export function TripQuestionnaire() {
             Back
           </Button>
           {currentStep === STEPS.length - 1 ? (
-            <Button onClick={handleSubmit} disabled={loading}>
+            <Button variant="terracotta" onClick={handleSubmit} disabled={loading}>
               <Check className="mr-2 h-4 w-4" />
               {loading ? 'Creating...' : 'Create Trip'}
             </Button>

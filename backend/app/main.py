@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.database import init_db
-from app.api.routes import auth, trips, itinerary
+from app.api.routes import auth, trips, itinerary, checklists, expenses, imports, recommendations
 
 
 @asynccontextmanager
@@ -36,6 +36,10 @@ app.add_middleware(
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 app.include_router(trips.router, prefix=settings.API_V1_PREFIX)
 app.include_router(itinerary.router, prefix=settings.API_V1_PREFIX)
+app.include_router(checklists.router, prefix=settings.API_V1_PREFIX)
+app.include_router(expenses.router, prefix=settings.API_V1_PREFIX)
+app.include_router(imports.router, prefix=settings.API_V1_PREFIX)
+app.include_router(recommendations.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/health")
