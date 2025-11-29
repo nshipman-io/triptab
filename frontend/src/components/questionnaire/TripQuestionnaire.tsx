@@ -351,7 +351,7 @@ export function TripQuestionnaire() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Card className="p-10">
+      <Card className="p-10 overflow-visible">
         <CardHeader className="p-0 mb-8">
           <div className="mb-6">
             <Progress value={progress} className="h-2" />
