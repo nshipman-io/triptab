@@ -15,15 +15,19 @@ export function JoinTrip() {
   const [joining, setJoining] = useState(false)
   const [error, setError] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isMember, setIsMember] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
       if (!shareCode) return
 
+      let currentUser: User | null = null
+
       // Check authentication status first
       try {
         const userData = await api.getCurrentUser()
-        setUser(userData as User)
+        currentUser = userData as User
+        setUser(currentUser)
         setIsAuthenticated(true)
       } catch {
         setIsAuthenticated(false)
@@ -31,8 +35,27 @@ export function JoinTrip() {
 
       // Fetch trip details (public endpoint)
       try {
-        const tripData = await api.getTripByShareCode(shareCode)
-        setTrip(tripData as Trip)
+        const tripData = await api.getTripByShareCode(shareCode) as Trip
+        setTrip(tripData)
+
+        // If authenticated, check if user is already a member or owner
+        if (currentUser && tripData) {
+          // Check if user is the owner
+          if (tripData.owner_id === currentUser.id) {
+            setIsMember(true)
+          } else {
+            // Check if user is a member by trying to fetch members
+            try {
+              const membersData = await api.getTripMembers(tripData.id)
+              const members = (membersData as { data: Array<{ user_id: string }> }).data || membersData as Array<{ user_id: string }>
+              const isAlreadyMember = members.some((m: { user_id: string }) => m.user_id === currentUser!.id)
+              setIsMember(isAlreadyMember)
+            } catch {
+              // If we can't fetch members, user might not have access yet
+              setIsMember(false)
+            }
+          }
+        }
       } catch {
         setError('Trip not found or link has expired')
       } finally {
@@ -97,6 +120,11 @@ export function JoinTrip() {
               <CardTitle className="text-2xl font-serif text-destructive">Oops!</CardTitle>
               <CardDescription className="text-ink-light mt-2">{error}</CardDescription>
             </>
+          ) : trip && isMember ? (
+            <>
+              <CardTitle className="text-2xl font-serif">You're going!</CardTitle>
+              <CardDescription className="text-ink-light mt-2">You're already part of this trip</CardDescription>
+            </>
           ) : trip ? (
             <>
               <CardTitle className="text-2xl font-serif">You're invited!</CardTitle>
@@ -130,7 +158,18 @@ export function JoinTrip() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4 p-0 mt-8">
-              {isAuthenticated ? (
+              {isAuthenticated && isMember ? (
+                <>
+                  <Link to={`/trips/${trip.id}`} className="w-full">
+                    <Button className="w-full">
+                      View Trip
+                    </Button>
+                  </Link>
+                  <p className="text-center text-sm text-ink-light">
+                    Signed in as {user?.name || user?.email}
+                  </p>
+                </>
+              ) : isAuthenticated ? (
                 <>
                   <Button className="w-full" onClick={handleJoin} disabled={joining}>
                     {joining ? 'Joining...' : 'Join This Trip'}
