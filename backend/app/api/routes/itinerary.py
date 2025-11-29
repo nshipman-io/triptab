@@ -12,22 +12,35 @@ router = APIRouter(prefix="/trips/{trip_id}/itinerary", tags=["itinerary"])
 
 async def check_trip_access(trip_id: str, user_id: str, db: DbSession, require_edit: bool = False):
     """Check if user has access to trip"""
-    query = (
-        select(Trip)
-        .outerjoin(TripMember)
-        .where(
-            Trip.id == trip_id,
-            (Trip.owner_id == user_id) | (TripMember.user_id == user_id)
-        )
+    # First check if user is owner
+    result = await db.execute(
+        select(Trip).where(Trip.id == trip_id, Trip.owner_id == user_id)
     )
+    trip = result.scalar_one_or_none()
 
+    if trip:
+        return trip
+
+    # If not owner, check if user is a member
     if require_edit:
-        query = query.where(
-            (Trip.owner_id == user_id) |
-            (TripMember.role.in_([MemberRole.OWNER, MemberRole.EDITOR]))
+        # Need editor or owner role
+        result = await db.execute(
+            select(Trip)
+            .join(TripMember)
+            .where(
+                Trip.id == trip_id,
+                TripMember.user_id == user_id,
+                TripMember.role.in_([MemberRole.OWNER, MemberRole.EDITOR])
+            )
+        )
+    else:
+        # Any member role is fine
+        result = await db.execute(
+            select(Trip)
+            .join(TripMember)
+            .where(Trip.id == trip_id, TripMember.user_id == user_id)
         )
 
-    result = await db.execute(query)
     trip = result.scalar_one_or_none()
 
     if not trip:
