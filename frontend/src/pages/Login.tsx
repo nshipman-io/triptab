@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router'
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -9,12 +9,15 @@ import { api } from '@/lib/api'
 export function Login() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const from = (location.state as { from?: string })?.from || '/dashboard'
+  // Check query param first, then location state, then default
+  const redirectParam = searchParams.get('redirect')
+  const from = redirectParam || (location.state as { from?: string })?.from || '/dashboard'
   const message = (location.state as { message?: string })?.message
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -92,7 +95,7 @@ export function Login() {
             </Button>
             <p className="text-center text-sm text-ink-light">
               Don't have an account?{' '}
-              <Link to="/register" state={{ from }} className="text-terracotta hover:underline font-medium">
+              <Link to={redirectParam ? `/register?redirect=${redirectParam}` : "/register"} state={{ from }} className="text-terracotta hover:underline font-medium">
                 Sign up
               </Link>
             </p>

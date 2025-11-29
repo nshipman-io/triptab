@@ -11,7 +11,7 @@ import {
   ListTodo, DollarSign, Mail, Pencil, Trash2, X
 } from 'lucide-react'
 import { api } from '@/lib/api'
-import type { Trip, ItineraryItem, TripMember, ItineraryItemType } from '@/types'
+import type { Trip, ItineraryItem, TripMember, ItineraryItemType, TripPreferences, User } from '@/types'
 import { cn } from '@/lib/utils'
 import {
   getFlightSearchLinks,
@@ -26,6 +26,8 @@ import { ExpensesTab } from '@/components/expenses/ExpensesTab'
 import { ExploreTab } from '@/components/recommendations/ExploreTab'
 import { ImportDialog } from '@/components/import/ImportDialog'
 import { ItineraryItemForm } from '@/components/itinerary/ItineraryItemForm'
+import { TripPreferencesEditor } from '@/components/trip/TripPreferencesEditor'
+import { MemberManagement } from '@/components/trip/MemberManagement'
 
 const ITEM_ICONS: Record<ItineraryItemType, React.ReactNode> = {
   flight: <Plane className="h-5 w-5" />,
@@ -88,6 +90,7 @@ export function TripDetail() {
   const [trip, setTrip] = useState<Trip | null>(null)
   const [items, setItems] = useState<ItineraryItem[]>([])
   const [members, setMembers] = useState<TripMember[]>([])
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   const [activeTab, setActiveTab] = useState('itinerary')
@@ -124,15 +127,17 @@ export function TripDetail() {
     const fetchData = async () => {
       if (!id) return
       try {
-        const [tripData, itemsData, membersData] = await Promise.all([
+        const [tripData, itemsData, membersData, userData] = await Promise.all([
           api.getTrip(id),
           api.getItineraryItems(id),
           api.getTripMembers(id),
+          api.getCurrentUser(),
         ])
         const loadedTrip = tripData as Trip
         setTrip(loadedTrip)
         setItems((itemsData as { data: ItineraryItem[] }).data || itemsData as ItineraryItem[])
         setMembers((membersData as { data: TripMember[] }).data || membersData as TripMember[])
+        setCurrentUser(userData as User)
 
         // Initialize search parameters from trip data
         setSearchDepartDate(formatDateForInput(loadedTrip.start_date))
@@ -228,6 +233,19 @@ export function TripDetail() {
     }
   }
 
+  const reloadMembers = async () => {
+    if (!id) return
+    try {
+      const membersData = await api.getTripMembers(id)
+      setMembers((membersData as { data: TripMember[] }).data || membersData as TripMember[])
+    } catch (error) {
+      console.error('Failed to reload members:', error)
+    }
+  }
+
+  // Check if current user is the trip owner
+  const isOwner = trip && currentUser ? trip.owner_id === currentUser.id : false
+
   const handleEditName = () => {
     if (!trip) return
     setEditedName(trip.name)
@@ -261,6 +279,12 @@ export function TripDetail() {
       setIsDeleting(false)
       setShowDeleteConfirm(false)
     }
+  }
+
+  const handleSavePreferences = async (preferences: TripPreferences) => {
+    if (!id) return
+    const updatedTrip = await api.updateTrip(id, { preferences })
+    setTrip(updatedTrip as Trip)
   }
 
   if (loading) {
@@ -847,6 +871,12 @@ export function TripDetail() {
                     </CardContent>
                   </Card>
 
+                  {/* Trip Preferences - Mobile */}
+                  <TripPreferencesEditor
+                    preferences={trip.preferences}
+                    onSave={handleSavePreferences}
+                  />
+
                   {/* Share Link */}
                   <Card className="p-4">
                     <CardHeader className="p-0 mb-3">
@@ -868,42 +898,13 @@ export function TripDetail() {
                   </Card>
 
                   {/* Trip Members */}
-                  <Card className="p-4">
-                    <CardHeader className="p-0 mb-3">
-                      <CardTitle className="text-lg font-serif">Trip Members</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      {members.length === 0 ? (
-                        <p className="text-sm text-ink-light">No members yet. Share the link to invite people!</p>
-                      ) : (
-                        <div className="space-y-3">
-                          {members.map((member) => (
-                            <div key={member.id} className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-forest/10 text-sm font-medium text-forest shrink-0">
-                                  {member.user.name.charAt(0).toUpperCase()}
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="text-sm font-medium truncate">{member.user.name}</p>
-                                  <p className="text-xs text-ink-light capitalize">{member.role}</p>
-                                </div>
-                              </div>
-                              <div className="text-right shrink-0">
-                                {member.tickets_confirmed ? (
-                                  <span className="flex items-center gap-1 text-xs text-green-600">
-                                    <Check className="h-3 w-3" />
-                                    Confirmed
-                                  </span>
-                                ) : (
-                                  <span className="text-xs text-ink-light capitalize">{member.status}</span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                  <MemberManagement
+                    tripId={id!}
+                    members={members}
+                    currentUserId={currentUser?.id || ''}
+                    isOwner={isOwner}
+                    onMemberUpdate={reloadMembers}
+                  />
                 </div>
               </TabsContent>
             </Tabs>
@@ -1180,6 +1181,12 @@ export function TripDetail() {
               </CardContent>
             </Card>
 
+            {/* Trip Preferences */}
+            <TripPreferencesEditor
+              preferences={trip.preferences}
+              onSave={handleSavePreferences}
+            />
+
             {/* Share Link */}
             <Card className="p-6">
               <CardHeader className="p-0 mb-4">
@@ -1201,42 +1208,13 @@ export function TripDetail() {
             </Card>
 
             {/* Trip Members */}
-            <Card className="p-6">
-              <CardHeader className="p-0 mb-4">
-                <CardTitle className="text-lg font-serif">Trip Members</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {members.length === 0 ? (
-                  <p className="text-sm text-ink-light">No members yet. Share the link to invite people!</p>
-                ) : (
-                  <div className="space-y-3">
-                    {members.map((member) => (
-                      <div key={member.id} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-forest/10 text-sm font-medium text-forest">
-                            {member.user.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">{member.user.name}</p>
-                            <p className="text-xs text-ink-light capitalize">{member.role}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          {member.tickets_confirmed ? (
-                            <span className="flex items-center gap-1 text-xs text-green-600">
-                              <Check className="h-3 w-3" />
-                              Confirmed
-                            </span>
-                          ) : (
-                            <span className="text-xs text-ink-light capitalize">{member.status}</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <MemberManagement
+              tripId={id!}
+              members={members}
+              currentUserId={currentUser?.id || ''}
+              isOwner={isOwner}
+              onMemberUpdate={reloadMembers}
+            />
           </div>
         </div>
       </main>

@@ -124,6 +124,7 @@ async def add_recommendation_to_itinerary(
         "restaurants": "restaurant",
         "activities": "experience",
         "attractions": "experience",
+        "hotels": "hotel",
     }
     item_type = type_mapping.get(rec.category, "experience")
 

@@ -54,16 +54,40 @@ recommendations_agent = Agent(
 Your task is to generate personalized recommendations based on the trip context provided.
 
 Guidelines:
+- PRIORITIZE recommendations that match the trip's vibe and preferences:
+  - For "couple" trips: focus on romantic spots, intimate venues, couples experiences
+  - For "family" trips: focus on kid-friendly, educational, safe options
+  - For "friends" trips: focus on group activities, social venues, fun experiences
+  - For "solo" trips: focus on unique experiences, safe areas, social opportunities
+
+- RESPECT the budget level:
+  - "budget": affordable options, free activities, street food, hostels
+  - "moderate": mid-range restaurants, boutique hotels, popular attractions
+  - "luxury": high-end dining, premium experiences, exclusive venues
+
+- ALIGN with activity preferences:
+  - "adventure": outdoor activities, extreme sports, hiking, water sports
+  - "relaxation": spas, beaches, quiet cafes, scenic walks
+  - "culture": museums, historical sites, local traditions, architecture
+  - "food": local cuisine, food tours, cooking classes, markets
+  - "nature": parks, wildlife, scenic viewpoints, botanical gardens
+  - "nightlife": bars, clubs, live music, evening entertainment
+
+- For HOTEL recommendations, match the vibe:
+  - "couple" + "luxury": boutique hotels, romantic suites, hotels with spa
+  - "couple" + "moderate": well-rated 3-4 star hotels, charming B&Bs
+  - "family": family-friendly resorts, hotels with pools, apartments with kitchens
+  - "friends": hostels, party hotels, central locations, shared accommodations
+  - "solo" + "budget": hostels with social areas, affordable guesthouses
+  - Include amenities, location benefits, and what makes it special for their trip type
+
 - Provide diverse options across the requested category
 - Consider the trip dates (season, weather, local events)
-- Respect the traveler's preferences and budget
 - Avoid recommending places already in the itinerary
 - Include approximate coordinates for map display when possible
-- For restaurants, consider cuisine diversity and meal types
-- For activities, balance indoor/outdoor options based on weather
 - Provide realistic cost estimates using $ symbols or specific amounts
 - Add relevant tags for filtering (family-friendly, romantic, adventure, etc.)
-- Explain WHY each place is recommended based on the preferences''',
+- Explain WHY each place is recommended based on the specific preferences''',
     retries=2,
 )
 
@@ -73,15 +97,31 @@ async def add_trip_context(ctx: RunContext[RecommendationDeps]) -> str:
     """Dynamic instructions with trip context."""
     deps = ctx.deps
     existing = ', '.join(deps.existing_itinerary) if deps.existing_itinerary else 'Nothing yet'
+    prefs = deps.traveler_preferences
 
-    prefs_str = ', '.join(f"{k}: {v}" for k, v in deps.traveler_preferences.items()) if deps.traveler_preferences else 'None specified'
+    # Extract key preferences with clear labels
+    travel_type = prefs.get('travel_type', 'Not specified')
+    budget = prefs.get('budget_range', 'moderate')
+    activities = prefs.get('activities', [])
+    num_travelers = prefs.get('num_travelers', 2)
+    special_requirements = prefs.get('special_requirements', '')
+
+    activities_str = ', '.join(activities) if activities else 'general sightseeing'
 
     return f'''
 Current Trip Details:
 - Destination: {deps.destination}
 - Dates: {deps.trip_dates[0]} to {deps.trip_dates[1]}
-- Traveler Preferences: {prefs_str}
-- Already planned: {existing}
+- Number of Travelers: {num_travelers}
 
-Important: Do not recommend places already in the itinerary.
+Trip Vibe & Preferences:
+- Travel Type: {travel_type} (IMPORTANT: tailor recommendations to this group type)
+- Budget Level: {budget} (IMPORTANT: match price points to this budget)
+- Interests: {activities_str} (IMPORTANT: prioritize these activity types)
+{f'- Special Requirements: {special_requirements}' if special_requirements else ''}
+
+Already planned: {existing}
+
+CRITICAL: Your recommendations MUST align with the travel type, budget, and interests above.
+Do not recommend places already in the itinerary.
 '''

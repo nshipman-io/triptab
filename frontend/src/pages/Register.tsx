@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router'
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -9,7 +9,10 @@ import { api } from '@/lib/api'
 export function Register() {
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as { from?: string })?.from || '/plan'
+  const [searchParams] = useSearchParams()
+  // Check query param first, then location state, then default
+  const redirectParam = searchParams.get('redirect')
+  const from = redirectParam || (location.state as { from?: string })?.from || '/plan'
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -118,7 +121,7 @@ export function Register() {
             </Button>
             <p className="text-center text-sm text-ink-light">
               Already have an account?{' '}
-              <Link to="/login" className="text-terracotta hover:underline font-medium">
+              <Link to={redirectParam ? `/login?redirect=${redirectParam}` : "/login"} className="text-terracotta hover:underline font-medium">
                 Sign in
               </Link>
             </p>
