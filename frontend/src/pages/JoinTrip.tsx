@@ -4,19 +4,32 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar, Users, MapPin } from 'lucide-react'
 import { api } from '@/lib/api'
-import type { Trip } from '@/types'
+import type { Trip, User } from '@/types'
 
 export function JoinTrip() {
   const { shareCode } = useParams()
   const navigate = useNavigate()
   const [trip, setTrip] = useState<Trip | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [joining, setJoining] = useState(false)
   const [error, setError] = useState('')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
-    const fetchTrip = async () => {
+    const fetchData = async () => {
       if (!shareCode) return
+
+      // Check authentication status first
+      try {
+        const userData = await api.getCurrentUser()
+        setUser(userData as User)
+        setIsAuthenticated(true)
+      } catch {
+        setIsAuthenticated(false)
+      }
+
+      // Fetch trip details (public endpoint)
       try {
         const tripData = await api.getTripByShareCode(shareCode)
         setTrip(tripData as Trip)
@@ -27,7 +40,7 @@ export function JoinTrip() {
       }
     }
 
-    fetchTrip()
+    fetchData()
   }, [shareCode])
 
   const handleJoin = async () => {
@@ -37,15 +50,26 @@ export function JoinTrip() {
       await api.joinTrip(shareCode)
       navigate(`/trips/${trip?.id}`)
     } catch (err) {
-      if (err instanceof Error && err.message.includes('login')) {
+      if (err instanceof Error && err.message.includes('401')) {
         // Redirect to login with return URL
         navigate(`/login?redirect=/join/${shareCode}`)
+      } else if (err instanceof Error && err.message.includes('Already')) {
+        // Already a member, just navigate to trip
+        navigate(`/trips/${trip?.id}`)
       } else {
         setError(err instanceof Error ? err.message : 'Failed to join trip')
       }
     } finally {
       setJoining(false)
     }
+  }
+
+  const handleLoginRedirect = () => {
+    navigate(`/login?redirect=/join/${shareCode}`)
+  }
+
+  const handleRegisterRedirect = () => {
+    navigate(`/register?redirect=/join/${shareCode}`)
   }
 
   if (loading) {
@@ -106,12 +130,28 @@ export function JoinTrip() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4 p-0 mt-8">
-              <Button className="w-full" onClick={handleJoin} disabled={joining}>
-                {joining ? 'Joining...' : 'Join This Trip'}
-              </Button>
-              <p className="text-center text-sm text-ink-light">
-                By joining, you'll be able to view and edit the trip itinerary
-              </p>
+              {isAuthenticated ? (
+                <>
+                  <Button className="w-full" onClick={handleJoin} disabled={joining}>
+                    {joining ? 'Joining...' : 'Join This Trip'}
+                  </Button>
+                  <p className="text-center text-sm text-ink-light">
+                    Joining as {user?.name || user?.email}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Button className="w-full" onClick={handleRegisterRedirect}>
+                    Create Account & Join
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={handleLoginRedirect}>
+                    I Have an Account
+                  </Button>
+                  <p className="text-center text-sm text-ink-light">
+                    Sign in or create an account to join this trip
+                  </p>
+                </>
+              )}
             </CardFooter>
           </>
         )}

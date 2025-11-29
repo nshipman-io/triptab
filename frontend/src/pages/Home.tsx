@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
-import { Users, Calendar, Share2, Plane, User, LogOut, Map, Wallet, Wifi, Sparkles, Menu, X } from 'lucide-react'
+import { Users, Calendar, Plane, User, LogOut, Map, Wallet, Wifi, Sparkles, Menu, X } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { User as UserType } from '@/types'
 
@@ -171,12 +171,6 @@ export function Home() {
             <Button size="lg" className="gap-2 w-full sm:w-auto">
               <Calendar className="h-5 w-5" />
               Start Planning
-            </Button>
-          </Link>
-          <Link to="#features" className="w-full sm:w-auto">
-            <Button size="lg" variant="outline" className="gap-2 w-full sm:w-auto">
-              <Share2 className="h-5 w-5" />
-              See How It Works
             </Button>
           </Link>
         </div>

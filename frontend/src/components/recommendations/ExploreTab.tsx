@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Compass, Loader2, MapPin, Clock, DollarSign, Plus, Star, Utensils, Ticket, Camera } from 'lucide-react'
+import { Compass, Loader2, MapPin, Clock, DollarSign, Plus, Star, Utensils, Ticket, Camera, Hotel } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { api } from '@/lib/api'
@@ -9,6 +9,7 @@ const CATEGORY_OPTIONS = [
   { value: 'restaurants', label: 'Restaurants', icon: <Utensils className="h-4 w-4" /> },
   { value: 'activities', label: 'Activities', icon: <Ticket className="h-4 w-4" /> },
   { value: 'attractions', label: 'Attractions', icon: <Camera className="h-4 w-4" /> },
+  { value: 'hotels', label: 'Hotels', icon: <Hotel className="h-4 w-4" /> },
 ]
 
 interface ExploreTabProps {
