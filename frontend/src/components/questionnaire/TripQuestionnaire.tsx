@@ -171,8 +171,17 @@ export function TripQuestionnaire() {
                   type="number"
                   min={2}
                   max={20}
-                  value={preferences.num_travelers}
-                  onChange={(e) => setPreferences({ ...preferences, num_travelers: parseInt(e.target.value) || 2 })}
+                  value={preferences.num_travelers || ''}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    // Allow empty input while typing, but use the raw value
+                    setPreferences({ ...preferences, num_travelers: val === '' ? 0 : parseInt(val) })
+                  }}
+                  onBlur={(e) => {
+                    // On blur, ensure minimum of 2 for group travel
+                    const val = parseInt(e.target.value) || 2
+                    setPreferences({ ...preferences, num_travelers: Math.max(2, val) })
+                  }}
                 />
               </div>
             )}
