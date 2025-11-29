@@ -64,15 +64,20 @@ async def create_trip(trip_data: TripCreate, current_user: CurrentUser, db: DbSe
 
 @router.get("/{trip_id}", response_model=TripResponse)
 async def get_trip(trip_id: str, current_user: CurrentUser, db: DbSession):
+    # First check if user is owner
     result = await db.execute(
-        select(Trip)
-        .outerjoin(TripMember)
-        .where(
-            Trip.id == trip_id,
-            (Trip.owner_id == current_user.id) | (TripMember.user_id == current_user.id)
-        )
+        select(Trip).where(Trip.id == trip_id, Trip.owner_id == current_user.id)
     )
     trip = result.scalar_one_or_none()
+
+    # If not owner, check if user is a member
+    if not trip:
+        result = await db.execute(
+            select(Trip)
+            .join(TripMember)
+            .where(Trip.id == trip_id, TripMember.user_id == current_user.id)
+        )
+        trip = result.scalar_one_or_none()
 
     if not trip:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found")
@@ -98,16 +103,24 @@ async def update_trip(
     current_user: CurrentUser,
     db: DbSession
 ):
+    # First check if user is owner
     result = await db.execute(
-        select(Trip)
-        .outerjoin(TripMember)
-        .where(
-            Trip.id == trip_id,
-            (Trip.owner_id == current_user.id) |
-            ((TripMember.user_id == current_user.id) & (TripMember.role.in_([MemberRole.OWNER, MemberRole.EDITOR])))
-        )
+        select(Trip).where(Trip.id == trip_id, Trip.owner_id == current_user.id)
     )
     trip = result.scalar_one_or_none()
+
+    # If not owner, check if user is an editor member
+    if not trip:
+        result = await db.execute(
+            select(Trip)
+            .join(TripMember)
+            .where(
+                Trip.id == trip_id,
+                TripMember.user_id == current_user.id,
+                TripMember.role.in_([MemberRole.OWNER, MemberRole.EDITOR])
+            )
+        )
+        trip = result.scalar_one_or_none()
 
     if not trip:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found")
@@ -176,16 +189,23 @@ async def join_trip(share_code: str, current_user: CurrentUser, db: DbSession):
 
 @router.get("/{trip_id}/members", response_model=list[TripMemberResponse])
 async def get_trip_members(trip_id: str, current_user: CurrentUser, db: DbSession):
-    # Check access
+    # Check access - first check if owner
     result = await db.execute(
-        select(Trip)
-        .outerjoin(TripMember)
-        .where(
-            Trip.id == trip_id,
-            (Trip.owner_id == current_user.id) | (TripMember.user_id == current_user.id)
-        )
+        select(Trip).where(Trip.id == trip_id, Trip.owner_id == current_user.id)
     )
-    if not result.scalar_one_or_none():
+    has_access = result.scalar_one_or_none() is not None
+
+    # If not owner, check if member
+    if not has_access:
+        result = await db.execute(
+            select(TripMember).where(
+                TripMember.trip_id == trip_id,
+                TripMember.user_id == current_user.id
+            )
+        )
+        has_access = result.scalar_one_or_none() is not None
+
+    if not has_access:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found")
 
     # Get members
