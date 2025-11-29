@@ -326,11 +326,11 @@ export function TripDetail() {
 
       {/* Header */}
       <header className="border-b border-sand-dark bg-cream">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="container mx-auto px-4 md:px-6 py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 md:gap-4 min-w-0">
               <Link to="/dashboard">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="shrink-0">
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
@@ -343,7 +343,7 @@ export function TripDetail() {
                       if (e.key === 'Enter') handleSaveName()
                       if (e.key === 'Escape') handleCancelEditName()
                     }}
-                    className="text-xl font-serif h-10 w-64"
+                    className="text-lg md:text-xl font-serif h-10 w-full max-w-64"
                     autoFocus
                   />
                   <Button size="icon" variant="ghost" onClick={handleSaveName}>
@@ -354,24 +354,24 @@ export function TripDetail() {
                   </Button>
                 </div>
               ) : (
-                <div className="group flex items-center gap-2">
-                  <div>
-                    <h1 className="text-2xl font-serif text-ink">{trip.name}</h1>
-                    <p className="text-ink-light">{trip.destination}</p>
+                <div className="group flex items-center gap-2 min-w-0">
+                  <div className="min-w-0">
+                    <h1 className="text-lg md:text-2xl font-serif text-ink truncate">{trip.name}</h1>
+                    <p className="text-sm text-ink-light truncate">{trip.destination}</p>
                   </div>
                   <Button
                     size="icon"
                     variant="ghost"
                     onClick={handleEditName}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={handleCopyLink}>
+            <div className="flex items-center gap-1 md:gap-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={handleCopyLink} className="hidden sm:flex">
                 {copied ? (
                   <>
                     <Check className="mr-2 h-4 w-4" />
@@ -380,9 +380,12 @@ export function TripDetail() {
                 ) : (
                   <>
                     <Share2 className="mr-2 h-4 w-4" />
-                    Share Trip
+                    Share
                   </>
                 )}
+              </Button>
+              <Button variant="outline" size="icon" onClick={handleCopyLink} className="sm:hidden">
+                {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
               </Button>
               <Button
                 variant="ghost"
@@ -397,10 +400,10 @@ export function TripDetail() {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-4 md:px-6 py-6 md:py-8">
         {/* Import Dialog */}
         {showImportDialog && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <ImportDialog
               tripId={id!}
               onSuccess={reloadItems}
@@ -409,32 +412,61 @@ export function TripDetail() {
           </div>
         )}
 
-        <div className="grid gap-8 lg:grid-cols-3">
+        <div className="grid gap-6 lg:gap-8 lg:grid-cols-3">
           {/* Main Content - Tabs */}
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="mb-6 w-full grid grid-cols-4">
-                <TabsTrigger value="itinerary" className="gap-2">
+              {/* Desktop tabs */}
+              <TabsList className="mb-6 w-full hidden lg:grid lg:grid-cols-4">
+                <TabsTrigger value="itinerary" className="gap-2 text-sm px-3">
                   <Calendar className="h-4 w-4" />
                   Itinerary
                 </TabsTrigger>
-                <TabsTrigger value="expenses" className="gap-2">
+                <TabsTrigger value="expenses" className="gap-2 text-sm px-3">
                   <DollarSign className="h-4 w-4" />
                   Expenses
                 </TabsTrigger>
-                <TabsTrigger value="checklists" className="gap-2">
+                <TabsTrigger value="checklists" className="gap-2 text-sm px-3">
                   <ListTodo className="h-4 w-4" />
                   Checklists
                 </TabsTrigger>
-                <TabsTrigger value="explore" className="gap-2">
+                <TabsTrigger value="explore" className="gap-2 text-sm px-3">
                   <Compass className="h-4 w-4" />
                   Explore
                 </TabsTrigger>
               </TabsList>
 
+              {/* Mobile tabs - includes Book and Info */}
+              <TabsList className="mb-6 w-full grid grid-cols-6 lg:hidden">
+                <TabsTrigger value="itinerary" className="gap-1 text-xs px-1">
+                  <Calendar className="h-4 w-4" />
+                  <span className="hidden sm:inline">Itinerary</span>
+                </TabsTrigger>
+                <TabsTrigger value="expenses" className="gap-1 text-xs px-1">
+                  <DollarSign className="h-4 w-4" />
+                  <span className="hidden sm:inline">Expenses</span>
+                </TabsTrigger>
+                <TabsTrigger value="checklists" className="gap-1 text-xs px-1">
+                  <ListTodo className="h-4 w-4" />
+                  <span className="hidden sm:inline">Checklists</span>
+                </TabsTrigger>
+                <TabsTrigger value="explore" className="gap-1 text-xs px-1">
+                  <Compass className="h-4 w-4" />
+                  <span className="hidden sm:inline">Explore</span>
+                </TabsTrigger>
+                <TabsTrigger value="book" className="gap-1 text-xs px-1">
+                  <Search className="h-4 w-4" />
+                  <span className="hidden sm:inline">Book</span>
+                </TabsTrigger>
+                <TabsTrigger value="info" className="gap-1 text-xs px-1">
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Info</span>
+                </TabsTrigger>
+              </TabsList>
+
               {/* Itinerary Tab */}
               <TabsContent value="itinerary">
-                <div className="mb-6 flex items-center justify-between">
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <h2 className="text-xl font-serif text-ink">Itinerary</h2>
                   <div className="flex flex-wrap gap-2">
                     <Button
@@ -499,72 +531,84 @@ export function TripDetail() {
                           {dateItems
                             .sort((a, b) => a.order - b.order)
                             .map((item) => (
-                              <Card key={item.id} className="group p-4">
-                                <CardContent className="flex items-center gap-4 p-0">
-                                  <GripVertical className="h-5 w-5 text-ink-light cursor-move" />
-                                  <div className={cn("rounded-full p-2", ITEM_COLORS[item.type])}>
-                                    {ITEM_ICONS[item.type]}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="font-medium truncate">{item.title}</h4>
-                                    {item.location && (
-                                      <p className="text-sm text-ink-light truncate">{item.location}</p>
-                                    )}
-                                  </div>
-                                  <div className="text-right">
-                                    <p className="text-sm">
-                                      {new Date(item.start_time).toLocaleTimeString([], {
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                      })}
-                                    </p>
-                                    {item.price && (
-                                      <p className="text-sm text-ink-light">
-                                        {item.currency || '$'}{item.price}
+                              <Card key={item.id} className="group p-3 md:p-4">
+                                <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 p-0">
+                                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    <GripVertical className="h-5 w-5 text-ink-light cursor-move shrink-0 hidden sm:block" />
+                                    <div className={cn("rounded-full p-2 shrink-0", ITEM_COLORS[item.type])}>
+                                      {ITEM_ICONS[item.type]}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="font-medium truncate">{item.title}</h4>
+                                      {item.location && (
+                                        <p className="text-sm text-ink-light truncate">{item.location}</p>
+                                      )}
+                                    </div>
+                                    <div className="text-right sm:hidden">
+                                      <p className="text-sm">
+                                        {new Date(item.start_time).toLocaleTimeString([], {
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                        })}
                                       </p>
-                                    )}
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-1">
-                                    {item.booking_confirmed ? (
-                                      <span className="flex items-center gap-1 text-sm text-green-600 mr-2">
-                                        <Check className="h-4 w-4" />
-                                        Booked
-                                      </span>
-                                    ) : item.booking_url ? (
-                                      <a href={item.booking_url} target="_blank" rel="noopener noreferrer">
-                                        <Button variant="outline" size="sm" className="gap-1">
-                                          View
-                                          <ExternalLink className="h-3 w-3" />
-                                        </Button>
-                                      </a>
-                                    ) : (
-                                      <a
-                                        href={getItemBookingLink(item, trip) || '#'}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                  <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-1">
+                                    <div className="text-right hidden sm:block">
+                                      <p className="text-sm">
+                                        {new Date(item.start_time).toLocaleTimeString([], {
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                        })}
+                                      </p>
+                                      {item.price && (
+                                        <p className="text-sm text-ink-light">
+                                          {item.currency || '$'}{item.price}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      {item.booking_confirmed ? (
+                                        <span className="flex items-center gap-1 text-xs sm:text-sm text-green-600 mr-1 sm:mr-2">
+                                          <Check className="h-3 w-3 sm:h-4 sm:w-4" />
+                                          <span className="hidden sm:inline">Booked</span>
+                                        </span>
+                                      ) : item.booking_url ? (
+                                        <a href={item.booking_url} target="_blank" rel="noopener noreferrer">
+                                          <Button variant="outline" size="sm" className="gap-1 h-8 text-xs">
+                                            View
+                                            <ExternalLink className="h-3 w-3" />
+                                          </Button>
+                                        </a>
+                                      ) : (
+                                        <a
+                                          href={getItemBookingLink(item, trip) || '#'}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                        >
+                                          <Button variant="outline" size="sm" className="gap-1 h-8 text-xs">
+                                            Book
+                                            <ExternalLink className="h-3 w-3" />
+                                          </Button>
+                                        </a>
+                                      )}
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleEditItem(item)}
+                                        className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                                       >
-                                        <Button variant="outline" size="sm" className="gap-1">
-                                          Book
-                                          <ExternalLink className="h-3 w-3" />
-                                        </Button>
-                                      </a>
-                                    )}
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => handleEditItem(item)}
-                                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                      <Pencil className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => handleDeleteItem(item.id)}
-                                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-ink-light hover:text-destructive"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                        <Pencil className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDeleteItem(item.id)}
+                                        className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-ink-light hover:text-destructive"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 </CardContent>
                               </Card>
@@ -594,11 +638,279 @@ export function TripDetail() {
                   onAddToItinerary={reloadItems}
                 />
               </TabsContent>
+
+              {/* Mobile-only Book Tab */}
+              <TabsContent value="book" className="lg:hidden">
+                <div className="space-y-6">
+                  {/* Book Travel - Mobile Version */}
+                  <Card className="bg-sand p-4 md:p-6">
+                    <CardHeader className="p-0 mb-4">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2 text-lg font-serif">
+                          <Search className="h-5 w-5 text-terracotta" />
+                          Book Travel
+                        </CardTitle>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowSearchSettings(!showSearchSettings)}
+                          className="gap-1 text-xs"
+                        >
+                          <Settings2 className="h-4 w-4" />
+                          {showSearchSettings ? 'Hide' : 'Edit'}
+                        </Button>
+                      </div>
+                      <CardDescription className="text-ink-light mt-1">Find and book flights, hotels, and more</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4 p-0">
+                      {/* Editable Search Parameters */}
+                      {showSearchSettings && (
+                        <div className="space-y-3 rounded-xl border border-sand-dark bg-cream p-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label htmlFor="mobileSearchDepartDate" className="text-xs">Depart</Label>
+                              <Input
+                                id="mobileSearchDepartDate"
+                                type="date"
+                                value={searchDepartDate}
+                                onChange={(e) => setSearchDepartDate(e.target.value)}
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="mobileSearchReturnDate" className="text-xs">Return</Label>
+                              <Input
+                                id="mobileSearchReturnDate"
+                                type="date"
+                                value={searchReturnDate}
+                                onChange={(e) => setSearchReturnDate(e.target.value)}
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="mobileSearchTravelers" className="text-xs">Travelers</Label>
+                            <Input
+                              id="mobileSearchTravelers"
+                              type="number"
+                              min={1}
+                              max={10}
+                              value={searchTravelersInput}
+                              onChange={(e) => setSearchTravelersInput(e.target.value)}
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="mobileSearchDestination" className="text-xs">Destination</Label>
+                            <Input
+                              id="mobileSearchDestination"
+                              type="text"
+                              value={searchDestination}
+                              onChange={(e) => setSearchDestination(e.target.value)}
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Current Search Summary */}
+                      {!showSearchSettings && (
+                        <div className="text-xs text-muted-foreground space-y-1 pb-2">
+                          <p>{searchOrigin ? `${searchOrigin} → ` : ''}{searchDestination.split(',')[0]}</p>
+                          <p>{searchDepartDate} - {searchReturnDate} • {searchTravelers} traveler{searchTravelers !== 1 ? 's' : ''}</p>
+                        </div>
+                      )}
+
+                      {/* Booking Links Grid */}
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Flights */}
+                        <div>
+                          <p className="mb-2 text-sm font-medium flex items-center gap-2">
+                            <Plane className="h-4 w-4" /> Flights
+                          </p>
+                          <div className="flex flex-col gap-2">
+                            {Object.entries(getFlightSearchLinks({
+                              originCode: searchOrigin || undefined,
+                              destination: searchDestination,
+                              departDate: searchDepartDate,
+                              returnDate: searchReturnDate,
+                              adults: 1,
+                            })).map(([name, url]) => (
+                              <a key={name} href={url} target="_blank" rel="noopener noreferrer">
+                                <Button variant="outline" size="sm" className="w-full gap-1 text-xs justify-start">
+                                  {name === 'googleFlights' ? 'Google' : name === 'kayak' ? 'Kayak' : 'Skyscanner'}
+                                  <ExternalLink className="h-3 w-3 ml-auto" />
+                                </Button>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Hotels */}
+                        <div>
+                          <p className="mb-2 text-sm font-medium flex items-center gap-2">
+                            <Hotel className="h-4 w-4" /> Hotels
+                          </p>
+                          <div className="flex flex-col gap-2">
+                            {Object.entries(getHotelSearchLinks({
+                              destination: searchDestination,
+                              checkIn: searchDepartDate,
+                              checkOut: searchReturnDate,
+                              guests: searchTravelers,
+                            })).map(([name, url]) => (
+                              <a key={name} href={url} target="_blank" rel="noopener noreferrer">
+                                <Button variant="outline" size="sm" className="w-full gap-1 text-xs justify-start">
+                                  {name === 'bookingCom' ? 'Booking' : name === 'hotelsCom' ? 'Hotels.com' : 'Airbnb'}
+                                  <ExternalLink className="h-3 w-3 ml-auto" />
+                                </Button>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Experiences */}
+                        <div>
+                          <p className="mb-2 text-sm font-medium flex items-center gap-2">
+                            <Compass className="h-4 w-4" /> Experiences
+                          </p>
+                          <div className="flex flex-col gap-2">
+                            {Object.entries(getExperienceSearchLinks({
+                              destination: searchDestination,
+                              date: searchDepartDate,
+                            })).map(([name, url]) => (
+                              <a key={name} href={url} target="_blank" rel="noopener noreferrer">
+                                <Button variant="outline" size="sm" className="w-full gap-1 text-xs justify-start">
+                                  {name === 'getYourGuide' ? 'GetYourGuide' : 'Viator'}
+                                  <ExternalLink className="h-3 w-3 ml-auto" />
+                                </Button>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* More */}
+                        <div>
+                          <p className="mb-2 text-sm font-medium flex items-center gap-2">
+                            <Utensils className="h-4 w-4" /> More
+                          </p>
+                          <div className="flex flex-col gap-2">
+                            <a href={getOpenTableUrl(searchDestination, searchDepartDate, searchTravelers)} target="_blank" rel="noopener noreferrer">
+                              <Button variant="outline" size="sm" className="w-full gap-1 text-xs justify-start">
+                                OpenTable
+                                <ExternalLink className="h-3 w-3 ml-auto" />
+                              </Button>
+                            </a>
+                            <a href={getRentalCarsUrl(searchDestination, searchDepartDate, searchReturnDate)} target="_blank" rel="noopener noreferrer">
+                              <Button variant="outline" size="sm" className="w-full gap-1 text-xs justify-start">
+                                Car Rental
+                                <ExternalLink className="h-3 w-3 ml-auto" />
+                              </Button>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Mobile-only Info Tab */}
+              <TabsContent value="info" className="lg:hidden">
+                <div className="space-y-4">
+                  {/* Trip Details */}
+                  <Card className="p-4">
+                    <CardHeader className="p-0 mb-3">
+                      <CardTitle className="text-lg font-serif">Trip Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 p-0">
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-5 w-5 text-terracotta shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm text-ink-light">Destination</p>
+                          <p className="font-medium truncate">{searchDestination.split(',')[0]}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Calendar className="h-5 w-5 text-terracotta shrink-0" />
+                        <div>
+                          <p className="text-sm text-ink-light">Dates</p>
+                          <p className="font-medium">{searchDepartDate} - {searchReturnDate}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Users className="h-5 w-5 text-terracotta shrink-0" />
+                        <div>
+                          <p className="text-sm text-ink-light">Travelers</p>
+                          <p className="font-medium">{searchTravelers} {searchTravelers === 1 ? 'person' : 'people'}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Share Link */}
+                  <Card className="p-4">
+                    <CardHeader className="p-0 mb-3">
+                      <CardTitle className="text-lg font-serif">Invite Others</CardTitle>
+                      <CardDescription className="text-ink-light mt-1 text-sm">Share this link to invite people</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="flex gap-2">
+                        <Input
+                          readOnly
+                          value={`${window.location.origin}/join/${trip.share_code}`}
+                          className="text-xs"
+                        />
+                        <Button variant="outline" size="icon" onClick={handleCopyLink}>
+                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Trip Members */}
+                  <Card className="p-4">
+                    <CardHeader className="p-0 mb-3">
+                      <CardTitle className="text-lg font-serif">Trip Members</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {members.length === 0 ? (
+                        <p className="text-sm text-ink-light">No members yet. Share the link to invite people!</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {members.map((member) => (
+                            <div key={member.id} className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-forest/10 text-sm font-medium text-forest shrink-0">
+                                  {member.user.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium truncate">{member.user.name}</p>
+                                  <p className="text-xs text-ink-light capitalize">{member.role}</p>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                {member.tickets_confirmed ? (
+                                  <span className="flex items-center gap-1 text-xs text-green-600">
+                                    <Check className="h-3 w-3" />
+                                    Confirmed
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-ink-light capitalize">{member.status}</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
             </Tabs>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
+          {/* Sidebar - Desktop only */}
+          <div className="hidden lg:block space-y-6">
             {/* Book Travel */}
             <Card className="bg-sand p-6">
               <CardHeader className="p-0 mb-4">

@@ -92,7 +92,7 @@ export function ExpensesTab({ tripId }: ExpensesTabProps) {
 
       {/* Summary Cards */}
       {summary && (
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
           {/* Total */}
           <Card>
             <CardHeader className="pb-2">
@@ -157,20 +157,20 @@ export function ExpensesTab({ tripId }: ExpensesTabProps) {
               {settlements.settlements.map((settlement, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between rounded-lg border p-3"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border p-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                    <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-primary/10 text-xs sm:text-sm font-medium text-primary shrink-0">
                       {settlement.from_user_name.charAt(0)}
                     </div>
-                    <span className="font-medium">{settlement.from_user_name}</span>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
+                    <span className="font-medium text-sm sm:text-base truncate max-w-20 sm:max-w-none">{settlement.from_user_name}</span>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-primary/10 text-xs sm:text-sm font-medium text-primary shrink-0">
                       {settlement.to_user_name.charAt(0)}
                     </div>
-                    <span className="font-medium">{settlement.to_user_name}</span>
+                    <span className="font-medium text-sm sm:text-base truncate max-w-20 sm:max-w-none">{settlement.to_user_name}</span>
                   </div>
-                  <span className="font-semibold text-green-600">
+                  <span className="font-semibold text-green-600 text-right">
                     ${settlement.amount.toFixed(2)}
                   </span>
                 </div>
