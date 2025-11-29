@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import String, DateTime, ForeignKey, Enum, Float, Integer, Boolean
+from sqlalchemy import String, DateTime, ForeignKey, Enum, Float, Integer, Boolean, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 import uuid
@@ -35,7 +35,7 @@ class ItineraryItem(Base):
     end_time: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     price: Mapped[float | None] = mapped_column(Float, nullable=True)
     currency: Mapped[str | None] = mapped_column(String(3), nullable=True, default="USD")
-    booking_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    booking_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     booking_confirmed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     notes: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

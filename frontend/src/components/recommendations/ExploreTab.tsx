@@ -16,9 +16,10 @@ interface ExploreTabProps {
   tripId: string
   tripStartDate: string
   onAddToItinerary: () => void
+  canEdit?: boolean
 }
 
-export function ExploreTab({ tripId, tripStartDate, onAddToItinerary }: ExploreTabProps) {
+export function ExploreTab({ tripId, tripStartDate, onAddToItinerary, canEdit = true }: ExploreTabProps) {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [loading, setLoading] = useState(false)
   const [category, setCategory] = useState('activities')
@@ -143,22 +144,24 @@ export function ExploreTab({ tripId, tripStartDate, onAddToItinerary }: ExploreT
                     <span className="capitalize">{rec.category}</span>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleAddToItinerary(rec, index)}
-                  disabled={addingIndex === index}
-                  className="shrink-0 h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
-                >
-                  {addingIndex === index ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4" />
-                      <span className="hidden sm:inline sm:ml-1">Add</span>
-                    </>
-                  )}
-                </Button>
+                {canEdit && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleAddToItinerary(rec, index)}
+                    disabled={addingIndex === index}
+                    className="shrink-0 h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+                  >
+                    {addingIndex === index ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4" />
+                        <span className="hidden sm:inline sm:ml-1">Add</span>
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
 
               {/* Description */}

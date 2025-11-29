@@ -19,9 +19,10 @@ interface ChecklistCardProps {
   checklist: Checklist
   onUpdate: (checklist: Checklist) => void
   onDelete: () => void
+  canEdit?: boolean
 }
 
-export function ChecklistCard({ tripId, checklist, onUpdate, onDelete }: ChecklistCardProps) {
+export function ChecklistCard({ tripId, checklist, onUpdate, onDelete, canEdit = true }: ChecklistCardProps) {
   const [newItemContent, setNewItemContent] = useState('')
   const [isAdding, setIsAdding] = useState(false)
 
@@ -84,9 +85,11 @@ export function ChecklistCard({ tripId, checklist, onUpdate, onDelete }: Checkli
             {CHECKLIST_ICONS[checklist.type as ChecklistType]}
             {checklist.name}
           </CardTitle>
-          <Button variant="ghost" size="icon" onClick={onDelete} className="h-8 w-8 text-muted-foreground hover:text-destructive">
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {canEdit && (
+            <Button variant="ghost" size="icon" onClick={onDelete} className="h-8 w-8 text-muted-foreground hover:text-destructive">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         {totalCount > 0 && (
           <div className="space-y-1">
@@ -128,47 +131,51 @@ export function ChecklistCard({ tripId, checklist, onUpdate, onDelete }: Checkli
                 >
                   {item.content}
                 </span>
-                <button
-                  onClick={() => handleDeleteItem(item.id)}
-                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
+                {canEdit && (
+                  <button
+                    onClick={() => handleDeleteItem(item.id)}
+                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                )}
               </div>
             ))}
         </div>
 
         {/* Add Item */}
-        {isAdding ? (
-          <div className="flex gap-2">
-            <Input
-              placeholder="Add item..."
-              value={newItemContent}
-              onChange={(e) => setNewItemContent(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAddItem()
-                if (e.key === 'Escape') {
-                  setIsAdding(false)
-                  setNewItemContent('')
-                }
-              }}
-              autoFocus
-              className="h-8 text-sm"
-            />
-            <Button size="sm" onClick={handleAddItem} className="h-8">
-              Add
+        {canEdit && (
+          isAdding ? (
+            <div className="flex gap-2">
+              <Input
+                placeholder="Add item..."
+                value={newItemContent}
+                onChange={(e) => setNewItemContent(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddItem()
+                  if (e.key === 'Escape') {
+                    setIsAdding(false)
+                    setNewItemContent('')
+                  }
+                }}
+                autoFocus
+                className="h-8 text-sm"
+              />
+              <Button size="sm" onClick={handleAddItem} className="h-8">
+                Add
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsAdding(true)}
+              className="w-full justify-start text-muted-foreground"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add item
             </Button>
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsAdding(true)}
-            className="w-full justify-start text-muted-foreground"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add item
-          </Button>
+          )
         )}
       </CardContent>
     </Card>

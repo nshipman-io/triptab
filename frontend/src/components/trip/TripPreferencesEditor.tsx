@@ -32,9 +32,10 @@ const ACTIVITY_OPTIONS: { value: ActivityPreference; label: string }[] = [
 interface TripPreferencesEditorProps {
   preferences: TripPreferences
   onSave: (preferences: TripPreferences) => Promise<void>
+  canEdit?: boolean
 }
 
-export function TripPreferencesEditor({ preferences, onSave }: TripPreferencesEditorProps) {
+export function TripPreferencesEditor({ preferences, onSave, canEdit = true }: TripPreferencesEditorProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editedPrefs, setEditedPrefs] = useState<TripPreferences>(preferences)
@@ -71,13 +72,15 @@ export function TripPreferencesEditor({ preferences, onSave }: TripPreferencesEd
         <CardHeader className="p-0 mb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-serif">Trip Vibe</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="gap-1">
-              <Pencil className="h-4 w-4" />
-              Edit
-            </Button>
+            {canEdit && (
+              <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="gap-1">
+                <Pencil className="h-4 w-4" />
+                Edit
+              </Button>
+            )}
           </div>
           <CardDescription className="text-ink-light mt-1">
-            Your preferences help us personalize recommendations
+            {canEdit ? 'Your preferences help us personalize recommendations' : 'Trip preferences set by the organizer'}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0 space-y-3">

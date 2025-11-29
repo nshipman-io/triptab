@@ -26,9 +26,10 @@ interface ExpenseCardProps {
   expense: Expense
   onEdit: () => void
   onDelete: () => void
+  canEdit?: boolean
 }
 
-export function ExpenseCard({ expense, onEdit, onDelete }: ExpenseCardProps) {
+export function ExpenseCard({ expense, onEdit, onDelete, canEdit = true }: ExpenseCardProps) {
   const formattedDate = new Date(expense.expense_date).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -65,14 +66,16 @@ export function ExpenseCard({ expense, onEdit, onDelete }: ExpenseCardProps) {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={onEdit} className="h-8 w-8">
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={onDelete} className="h-8 w-8 text-muted-foreground hover:text-destructive">
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+        {canEdit && (
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={onEdit} className="h-8 w-8">
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onDelete} className="h-8 w-8 text-muted-foreground hover:text-destructive">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

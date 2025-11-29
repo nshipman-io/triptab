@@ -10,9 +10,10 @@ import { cn } from '@/lib/utils'
 
 interface ExpensesTabProps {
   tripId: string
+  canEdit?: boolean
 }
 
-export function ExpensesTab({ tripId }: ExpensesTabProps) {
+export function ExpensesTab({ tripId, canEdit = true }: ExpensesTabProps) {
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [summary, setSummary] = useState<ExpenseSummary | null>(null)
   const [settlements, setSettlements] = useState<SettlementPlan | null>(null)
@@ -84,10 +85,12 @@ export function ExpensesTab({ tripId }: ExpensesTabProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Expenses</h2>
-        <Button onClick={() => setShowForm(true)} size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Expense
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setShowForm(true)} size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Expense
+          </Button>
+        )}
       </div>
 
       {/* Summary Cards */}
@@ -181,7 +184,7 @@ export function ExpensesTab({ tripId }: ExpensesTabProps) {
       )}
 
       {/* Expense Form */}
-      {(showForm || editingExpense) && (
+      {canEdit && (showForm || editingExpense) && (
         <ExpenseForm
           expense={editingExpense}
           onSubmit={editingExpense ? handleUpdateExpense : handleCreateExpense}
@@ -211,6 +214,7 @@ export function ExpensesTab({ tripId }: ExpensesTabProps) {
               expense={expense}
               onEdit={() => setEditingExpense(expense)}
               onDelete={() => handleDeleteExpense(expense.id)}
+              canEdit={canEdit}
             />
           ))}
         </div>

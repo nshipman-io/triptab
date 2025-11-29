@@ -21,9 +21,10 @@ const CHECKLIST_LABELS: Record<ChecklistType, string> = {
 
 interface ChecklistsTabProps {
   tripId: string
+  canEdit?: boolean
 }
 
-export function ChecklistsTab({ tripId }: ChecklistsTabProps) {
+export function ChecklistsTab({ tripId, canEdit = true }: ChecklistsTabProps) {
   const [checklists, setChecklists] = useState<Checklist[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -88,14 +89,16 @@ export function ChecklistsTab({ tripId }: ChecklistsTabProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Checklists</h2>
-        <Button onClick={() => setShowCreateForm(!showCreateForm)} size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          New Checklist
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setShowCreateForm(!showCreateForm)} size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            New Checklist
+          </Button>
+        )}
       </div>
 
       {/* Create Form */}
-      {showCreateForm && (
+      {canEdit && showCreateForm && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Create New Checklist</CardTitle>
@@ -153,6 +156,7 @@ export function ChecklistsTab({ tripId }: ChecklistsTabProps) {
               checklist={checklist}
               onUpdate={handleUpdateChecklist}
               onDelete={() => handleDeleteChecklist(checklist.id)}
+              canEdit={canEdit}
             />
           ))}
         </div>

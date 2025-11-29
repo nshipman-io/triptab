@@ -246,6 +246,10 @@ export function TripDetail() {
   // Check if current user is the trip owner
   const isOwner = trip && currentUser ? trip.owner_id === currentUser.id : false
 
+  // Check if current user can edit (owner or editor role)
+  const currentMember = members.find(m => m.user_id === currentUser?.id)
+  const canEdit = isOwner || (currentMember?.role === 'editor') || (currentMember?.role === 'owner')
+
   const handleEditName = () => {
     if (!trip) return
     setEditedName(trip.name)
@@ -358,7 +362,7 @@ export function TripDetail() {
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
-              {isEditingName ? (
+              {isEditingName && canEdit ? (
                 <div className="flex items-center gap-2">
                   <Input
                     value={editedName}
@@ -381,16 +385,21 @@ export function TripDetail() {
                 <div className="group flex items-center gap-2 min-w-0">
                   <div className="min-w-0">
                     <h1 className="text-lg md:text-2xl font-serif text-ink truncate">{trip.name}</h1>
-                    <p className="text-sm text-ink-light truncate">{trip.destination}</p>
+                    <p className="text-sm text-ink-light truncate">
+                      {trip.destination}
+                      {!canEdit && <span className="ml-2 text-xs bg-sand-dark px-2 py-0.5 rounded-full">View only</span>}
+                    </p>
                   </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={handleEditName}
-                    className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+                  {canEdit && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleEditName}
+                      className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -411,14 +420,16 @@ export function TripDetail() {
               <Button variant="outline" size="icon" onClick={handleCopyLink} className="sm:hidden">
                 {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="text-ink-light hover:text-destructive"
-              >
-                <Trash2 className="h-5 w-5" />
-              </Button>
+              {isOwner && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-ink-light hover:text-destructive"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -492,29 +503,31 @@ export function TripDetail() {
               <TabsContent value="itinerary">
                 <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <h2 className="text-xl font-serif text-ink">Itinerary</h2>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowImportDialog(true)}
-                      className="gap-1"
-                    >
-                      <Mail className="h-3 w-3" />
-                      Import
-                    </Button>
-                    {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
+                  {canEdit && (
+                    <div className="flex flex-wrap gap-2">
                       <Button
-                        key={type}
                         variant="outline"
                         size="sm"
-                        onClick={() => handleAddItem(type)}
+                        onClick={() => setShowImportDialog(true)}
                         className="gap-1"
                       >
-                        <Plus className="h-3 w-3" />
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                        <Mail className="h-3 w-3" />
+                        Import
                       </Button>
-                    ))}
-                  </div>
+                      {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
+                        <Button
+                          key={type}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddItem(type)}
+                          className="gap-1"
+                        >
+                          <Plus className="h-3 w-3" />
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Item Form */}
@@ -538,12 +551,16 @@ export function TripDetail() {
                       </div>
                       <h3 className="text-lg font-serif mb-2">No items yet</h3>
                       <p className="text-ink-light mb-6">
-                        Start adding flights, hotels, and experiences to your itinerary
+                        {canEdit
+                          ? 'Start adding flights, hotels, and experiences to your itinerary'
+                          : 'No items have been added to this itinerary yet'}
                       </p>
-                      <Button onClick={() => setShowImportDialog(true)} variant="outline">
-                        <Mail className="mr-2 h-4 w-4" />
-                        Import from Email
-                      </Button>
+                      {canEdit && (
+                        <Button onClick={() => setShowImportDialog(true)} variant="outline">
+                          <Mail className="mr-2 h-4 w-4" />
+                          Import from Email
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
                 ) : items.length > 0 && (
@@ -616,22 +633,26 @@ export function TripDetail() {
                                           </Button>
                                         </a>
                                       )}
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleEditItem(item)}
-                                        className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                                      >
-                                        <Pencil className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleDeleteItem(item.id)}
-                                        className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-ink-light hover:text-destructive"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
+                                      {canEdit && (
+                                        <>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleEditItem(item)}
+                                            className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                                          >
+                                            <Pencil className="h-4 w-4" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleDeleteItem(item.id)}
+                                            className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-ink-light hover:text-destructive"
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </>
+                                      )}
                                     </div>
                                   </div>
                                 </CardContent>
@@ -646,12 +667,12 @@ export function TripDetail() {
 
               {/* Expenses Tab */}
               <TabsContent value="expenses">
-                <ExpensesTab tripId={id!} />
+                <ExpensesTab tripId={id!} canEdit={canEdit} />
               </TabsContent>
 
               {/* Checklists Tab */}
               <TabsContent value="checklists">
-                <ChecklistsTab tripId={id!} />
+                <ChecklistsTab tripId={id!} canEdit={canEdit} />
               </TabsContent>
 
               {/* Explore Tab */}
@@ -660,6 +681,7 @@ export function TripDetail() {
                   tripId={id!}
                   tripStartDate={trip.start_date}
                   onAddToItinerary={reloadItems}
+                  canEdit={canEdit}
                 />
               </TabsContent>
 
@@ -875,6 +897,7 @@ export function TripDetail() {
                   <TripPreferencesEditor
                     preferences={trip.preferences}
                     onSave={handleSavePreferences}
+                    canEdit={canEdit}
                   />
 
                   {/* Share Link */}
@@ -1185,6 +1208,7 @@ export function TripDetail() {
             <TripPreferencesEditor
               preferences={trip.preferences}
               onSave={handleSavePreferences}
+              canEdit={canEdit}
             />
 
             {/* Share Link */}
