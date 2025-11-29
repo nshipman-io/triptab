@@ -54,32 +54,32 @@ export function ExploreTab({ tripId, tripStartDate, onAddToItinerary }: ExploreT
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">Explore</h2>
-          <p className="text-sm text-muted-foreground">
-            AI-powered recommendations for your trip
-          </p>
-        </div>
+      <div>
+        <h2 className="text-xl font-serif text-ink">Explore</h2>
+        <p className="text-sm text-ink-light">
+          AI-powered recommendations for your trip
+        </p>
       </div>
 
-      {/* Category Filter */}
-      <div className="flex gap-2">
-        {CATEGORY_OPTIONS.map((cat) => (
-          <Button
-            key={cat.value}
-            variant={category === cat.value ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setCategory(cat.value)}
-            className="gap-2"
-          >
-            {cat.icon}
-            {cat.label}
-          </Button>
-        ))}
-        <Button onClick={loadRecommendations} disabled={loading} className="ml-auto">
+      {/* Category Filter - stacked on mobile */}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap gap-2">
+          {CATEGORY_OPTIONS.map((cat) => (
+            <Button
+              key={cat.value}
+              variant={category === cat.value ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setCategory(cat.value)}
+              className="gap-1.5 text-xs sm:text-sm"
+            >
+              {cat.icon}
+              {cat.label}
+            </Button>
+          ))}
+        </div>
+        <Button onClick={loadRecommendations} disabled={loading} className="w-full sm:w-auto">
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -125,12 +125,13 @@ export function ExploreTab({ tripId, tripStartDate, onAddToItinerary }: ExploreT
 
       {/* Recommendations Grid */}
       {!loading && recommendations.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
           {recommendations.map((rec, index) => (
-            <Card key={index} className="p-5">
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="min-w-0">
-                  <h3 className="font-medium text-ink truncate">{rec.name}</h3>
+            <Card key={index} className="p-4 sm:p-5">
+              {/* Header with name and add button */}
+              <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-medium text-ink text-sm sm:text-base line-clamp-2">{rec.name}</h3>
                   <div className="flex items-center gap-2 mt-1 text-xs text-ink-light">
                     {rec.rating && (
                       <span className="flex items-center gap-1 text-golden">
@@ -146,23 +147,28 @@ export function ExploreTab({ tripId, tripStartDate, onAddToItinerary }: ExploreT
                   variant="outline"
                   onClick={() => handleAddToItinerary(rec, index)}
                   disabled={addingIndex === index}
-                  className="shrink-0"
+                  className="shrink-0 h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 >
                   {addingIndex === index ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Plus className="h-4 w-4" />
+                    <>
+                      <Plus className="h-4 w-4" />
+                      <span className="hidden sm:inline sm:ml-1">Add</span>
+                    </>
                   )}
                 </Button>
               </div>
 
-              <p className="text-sm text-ink-light leading-relaxed mb-3">{rec.description}</p>
+              {/* Description */}
+              <p className="text-xs sm:text-sm text-ink-light leading-relaxed mb-2 sm:mb-3 line-clamp-3">{rec.description}</p>
 
-              <div className="flex flex-wrap items-center gap-3 text-xs text-ink-light">
+              {/* Meta info */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-ink-light">
                 {rec.estimated_cost && (
                   <span className="flex items-center gap-1">
                     <DollarSign className="h-3 w-3 text-forest" />
-                    {rec.estimated_cost}
+                    <span className="truncate max-w-24">{rec.estimated_cost}</span>
                   </span>
                 )}
                 {rec.duration && (
@@ -172,29 +178,34 @@ export function ExploreTab({ tripId, tripStartDate, onAddToItinerary }: ExploreT
                   </span>
                 )}
                 {rec.location?.address && (
-                  <span className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-terracotta" />
-                    {rec.location.address}
+                  <span className="flex items-center gap-1 min-w-0">
+                    <MapPin className="h-3 w-3 text-terracotta shrink-0" />
+                    <span className="truncate">{rec.location.address}</span>
                   </span>
                 )}
               </div>
 
+              {/* Why recommended */}
               {rec.why_recommended && (
-                <p className="mt-3 text-xs italic text-ink-light">
+                <p className="mt-2 sm:mt-3 text-xs italic text-ink-light line-clamp-2">
                   {rec.why_recommended}
                 </p>
               )}
 
+              {/* Tags */}
               {rec.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {rec.tags.map((tag, i) => (
+                <div className="flex flex-wrap gap-1 sm:gap-1.5 mt-2 sm:mt-3">
+                  {rec.tags.slice(0, 4).map((tag, i) => (
                     <span
                       key={i}
-                      className="rounded-full bg-sand-dark px-2 py-0.5 text-xs text-ink-light"
+                      className="rounded-full bg-sand-dark px-1.5 sm:px-2 py-0.5 text-xs text-ink-light"
                     >
                       {tag}
                     </span>
                   ))}
+                  {rec.tags.length > 4 && (
+                    <span className="text-xs text-ink-light">+{rec.tags.length - 4}</span>
+                  )}
                 </div>
               )}
             </Card>

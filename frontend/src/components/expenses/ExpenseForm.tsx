@@ -73,7 +73,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel }: ExpenseFormProps) {
           </div>
 
           {/* Amount and Date */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="amount">Amount</Label>
               <div className="relative">
@@ -122,7 +122,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel }: ExpenseFormProps) {
           {/* Split Type */}
           <div className="space-y-2">
             <Label>Split Type</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {SPLIT_TYPES.map((type) => (
                 <Button
                   key={type.value}
@@ -133,7 +133,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel }: ExpenseFormProps) {
                   className="flex-col h-auto py-2"
                 >
                   <span>{type.label}</span>
-                  <span className="text-xs font-normal opacity-70">{type.description}</span>
+                  <span className="text-xs font-normal opacity-70 hidden sm:block">{type.description}</span>
                 </Button>
               ))}
             </div>
