@@ -26,6 +26,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
       CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost"]}
       DEBUG: "false"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
     depends_on:
       db:
         condition: service_healthy

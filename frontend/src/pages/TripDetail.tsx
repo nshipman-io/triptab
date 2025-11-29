@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useParams, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Plane, Hotel, MapPin, Utensils, Car, Calendar, Users, Share2, Plus,
-  Check, Copy, ArrowLeft, GripVertical, ExternalLink, Search, Compass, Settings2
+  Check, Copy, ArrowLeft, GripVertical, ExternalLink, Search, Compass, Settings2,
+  ListTodo, DollarSign, Mail, Pencil, Trash2, X
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { Trip, ItineraryItem, TripMember, ItineraryItemType } from '@/types'
@@ -19,6 +21,11 @@ import {
   getRentalCarsUrl,
 } from '@/lib/affiliates'
 import { searchAirports, formatAirport, type Airport } from '@/lib/airports'
+import { ChecklistsTab } from '@/components/checklists/ChecklistsTab'
+import { ExpensesTab } from '@/components/expenses/ExpensesTab'
+import { ExploreTab } from '@/components/recommendations/ExploreTab'
+import { ImportDialog } from '@/components/import/ImportDialog'
+import { ItineraryItemForm } from '@/components/itinerary/ItineraryItemForm'
 
 const ITEM_ICONS: Record<ItineraryItemType, React.ReactNode> = {
   flight: <Plane className="h-5 w-5" />,
@@ -77,11 +84,27 @@ function formatDateForInput(dateStr: string): string {
 
 export function TripDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [trip, setTrip] = useState<Trip | null>(null)
   const [items, setItems] = useState<ItineraryItem[]>([])
   const [members, setMembers] = useState<TripMember[]>([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [activeTab, setActiveTab] = useState('itinerary')
+  const [showImportDialog, setShowImportDialog] = useState(false)
+
+  // Edit trip name state
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [editedName, setEditedName] = useState('')
+
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  // Itinerary item form state
+  const [showItemForm, setShowItemForm] = useState(false)
+  const [itemFormType, setItemFormType] = useState<ItineraryItemType>('experience')
+  const [editingItem, setEditingItem] = useState<ItineraryItem | null>(null)
 
   // Editable search parameters
   const [showSearchSettings, setShowSearchSettings] = useState(false)
@@ -146,34 +169,113 @@ export function TripDetail() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleAddItem = async (type: ItineraryItemType) => {
+  const handleAddItem = (type: ItineraryItemType) => {
+    setItemFormType(type)
+    setEditingItem(null)
+    setShowItemForm(true)
+  }
+
+  const handleEditItem = (item: ItineraryItem) => {
+    setItemFormType(item.type)
+    setEditingItem(item)
+    setShowItemForm(true)
+  }
+
+  const handleDeleteItem = async (itemId: string) => {
     if (!id) return
     try {
-      const newItem = await api.createItineraryItem(id, {
-        type,
-        title: `New ${type}`,
-        start_time: new Date().toISOString(),
-        order: items.length,
-      })
-      setItems([...items, newItem as ItineraryItem])
+      await api.deleteItineraryItem(id, itemId)
+      setItems(items.filter(i => i.id !== itemId))
     } catch (error) {
-      console.error('Failed to add item:', error)
+      console.error('Failed to delete item:', error)
+    }
+  }
+
+  const handleSubmitItem = async (data: Record<string, unknown>) => {
+    if (!id) return
+    try {
+      if (editingItem) {
+        // Update existing item
+        const updatedItem = await api.updateItineraryItem(id, editingItem.id, data)
+        setItems(items.map(i => i.id === editingItem.id ? updatedItem as ItineraryItem : i))
+      } else {
+        // Create new item
+        const newItem = await api.createItineraryItem(id, {
+          ...data,
+          order: items.length,
+        })
+        setItems([...items, newItem as ItineraryItem])
+      }
+      setShowItemForm(false)
+      setEditingItem(null)
+    } catch (error) {
+      console.error('Failed to save item:', error)
+    }
+  }
+
+  const handleCancelItemForm = () => {
+    setShowItemForm(false)
+    setEditingItem(null)
+  }
+
+  const reloadItems = async () => {
+    if (!id) return
+    try {
+      const itemsData = await api.getItineraryItems(id)
+      setItems((itemsData as { data: ItineraryItem[] }).data || itemsData as ItineraryItem[])
+    } catch (error) {
+      console.error('Failed to reload items:', error)
+    }
+  }
+
+  const handleEditName = () => {
+    if (!trip) return
+    setEditedName(trip.name)
+    setIsEditingName(true)
+  }
+
+  const handleSaveName = async () => {
+    if (!id || !editedName.trim()) return
+    try {
+      const updatedTrip = await api.updateTrip(id, { name: editedName.trim() })
+      setTrip(updatedTrip as Trip)
+      setIsEditingName(false)
+    } catch (error) {
+      console.error('Failed to update trip name:', error)
+    }
+  }
+
+  const handleCancelEditName = () => {
+    setIsEditingName(false)
+    setEditedName('')
+  }
+
+  const handleDeleteTrip = async () => {
+    if (!id) return
+    setIsDeleting(true)
+    try {
+      await api.deleteTrip(id)
+      navigate('/dashboard')
+    } catch (error) {
+      console.error('Failed to delete trip:', error)
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
     }
   }
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-muted-foreground">Loading trip...</div>
+      <div className="flex min-h-screen items-center justify-center bg-sand">
+        <div className="text-ink-light">Loading trip...</div>
       </div>
     )
   }
 
   if (!trip) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-sand">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">Trip not found</h1>
+          <h1 className="text-2xl font-serif">Trip not found</h1>
           <Link to="/dashboard">
             <Button className="mt-4">Back to Dashboard</Button>
           </Link>
@@ -191,10 +293,40 @@ export function TripDetail() {
   }, {} as Record<string, ItineraryItem[]>)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-sand">
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <Card className="w-full max-w-md p-6">
+            <CardHeader className="p-0 mb-6">
+              <CardTitle className="text-destructive font-serif">Delete Trip</CardTitle>
+              <CardDescription className="text-ink-light mt-2">
+                Are you sure you want to delete "{trip.name}"? This action cannot be undone.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex gap-2 justify-end p-0">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteTrip}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Trip'}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Header */}
-      <header className="border-b bg-white">
-        <div className="container mx-auto px-4 py-4">
+      <header className="border-b border-sand-dark bg-cream">
+        <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link to="/dashboard">
@@ -202,10 +334,41 @@ export function TripDetail() {
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
-              <div>
-                <h1 className="text-2xl font-bold">{trip.name}</h1>
-                <p className="text-muted-foreground">{trip.destination}</p>
-              </div>
+              {isEditingName ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveName()
+                      if (e.key === 'Escape') handleCancelEditName()
+                    }}
+                    className="text-xl font-serif h-10 w-64"
+                    autoFocus
+                  />
+                  <Button size="icon" variant="ghost" onClick={handleSaveName}>
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={handleCancelEditName}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="group flex items-center gap-2">
+                  <div>
+                    <h1 className="text-2xl font-serif text-ink">{trip.name}</h1>
+                    <p className="text-ink-light">{trip.destination}</p>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleEditName}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={handleCopyLink}>
@@ -221,89 +384,156 @@ export function TripDetail() {
                   </>
                 )}
               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="text-ink-light hover:text-destructive"
+              >
+                <Trash2 className="h-5 w-5" />
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Main Content - Itinerary */}
-          <div className="lg:col-span-2">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Itinerary</h2>
-              <div className="flex gap-2">
-                {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
-                  <Button
-                    key={type}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleAddItem(type)}
-                    className="gap-1"
-                  >
-                    <Plus className="h-3 w-3" />
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </Button>
-                ))}
-              </div>
-            </div>
+      <main className="container mx-auto px-6 py-8">
+        {/* Import Dialog */}
+        {showImportDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <ImportDialog
+              tripId={id!}
+              onSuccess={reloadItems}
+              onClose={() => setShowImportDialog(false)}
+            />
+          </div>
+        )}
 
-            {items.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold">No items yet</h3>
-                  <p className="text-muted-foreground">
-                    Start adding flights, hotels, and experiences to your itinerary
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-6">
-                {Object.entries(itemsByDate).map(([date, dateItems]) => (
-                  <div key={date}>
-                    <h3 className="mb-3 text-sm font-medium text-muted-foreground">{date}</h3>
-                    <div className="space-y-2">
-                      {dateItems
-                        .sort((a, b) => a.order - b.order)
-                        .map((item) => (
-                          <Card key={item.id} className="cursor-move">
-                            <CardContent className="flex items-center gap-4 p-4">
-                              <GripVertical className="h-5 w-5 text-muted-foreground" />
-                              <div className={cn("rounded-full p-2", ITEM_COLORS[item.type])}>
-                                {ITEM_ICONS[item.type]}
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="font-medium">{item.title}</h4>
-                                {item.location && (
-                                  <p className="text-sm text-muted-foreground">{item.location}</p>
-                                )}
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm">
-                                  {new Date(item.start_time).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
-                                </p>
-                                {item.price && (
-                                  <p className="text-sm text-muted-foreground">
-                                    {item.currency || '$'}{item.price}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {item.booking_confirmed ? (
-                                  <span className="flex items-center gap-1 text-sm text-green-600">
-                                    <Check className="h-4 w-4" />
-                                    Booked
-                                  </span>
-                                ) : (
-                                  <>
-                                    {item.booking_url ? (
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Main Content - Tabs */}
+          <div className="lg:col-span-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="mb-6 w-full grid grid-cols-4">
+                <TabsTrigger value="itinerary" className="gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Itinerary
+                </TabsTrigger>
+                <TabsTrigger value="expenses" className="gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Expenses
+                </TabsTrigger>
+                <TabsTrigger value="checklists" className="gap-2">
+                  <ListTodo className="h-4 w-4" />
+                  Checklists
+                </TabsTrigger>
+                <TabsTrigger value="explore" className="gap-2">
+                  <Compass className="h-4 w-4" />
+                  Explore
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Itinerary Tab */}
+              <TabsContent value="itinerary">
+                <div className="mb-6 flex items-center justify-between">
+                  <h2 className="text-xl font-serif text-ink">Itinerary</h2>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowImportDialog(true)}
+                      className="gap-1"
+                    >
+                      <Mail className="h-3 w-3" />
+                      Import
+                    </Button>
+                    {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
+                      <Button
+                        key={type}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAddItem(type)}
+                        className="gap-1"
+                      >
+                        <Plus className="h-3 w-3" />
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Item Form */}
+                {showItemForm && (
+                  <div className="mb-6">
+                    <ItineraryItemForm
+                      type={itemFormType}
+                      item={editingItem}
+                      tripStartDate={trip.start_date}
+                      onSubmit={handleSubmitItem}
+                      onCancel={handleCancelItemForm}
+                    />
+                  </div>
+                )}
+
+                {items.length === 0 && !showItemForm ? (
+                  <Card className="p-8">
+                    <CardContent className="py-8 text-center p-0">
+                      <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-gradient-to-br from-sand to-sand-dark flex items-center justify-center">
+                        <Calendar className="h-8 w-8 text-forest" />
+                      </div>
+                      <h3 className="text-lg font-serif mb-2">No items yet</h3>
+                      <p className="text-ink-light mb-6">
+                        Start adding flights, hotels, and experiences to your itinerary
+                      </p>
+                      <Button onClick={() => setShowImportDialog(true)} variant="outline">
+                        <Mail className="mr-2 h-4 w-4" />
+                        Import from Email
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : items.length > 0 && (
+                  <div className="space-y-6">
+                    {Object.entries(itemsByDate).map(([date, dateItems]) => (
+                      <div key={date}>
+                        <h3 className="mb-3 text-sm font-medium text-ink-light">{date}</h3>
+                        <div className="space-y-2">
+                          {dateItems
+                            .sort((a, b) => a.order - b.order)
+                            .map((item) => (
+                              <Card key={item.id} className="group p-4">
+                                <CardContent className="flex items-center gap-4 p-0">
+                                  <GripVertical className="h-5 w-5 text-ink-light cursor-move" />
+                                  <div className={cn("rounded-full p-2", ITEM_COLORS[item.type])}>
+                                    {ITEM_ICONS[item.type]}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-medium truncate">{item.title}</h4>
+                                    {item.location && (
+                                      <p className="text-sm text-ink-light truncate">{item.location}</p>
+                                    )}
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-sm">
+                                      {new Date(item.start_time).toLocaleTimeString([], {
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                      })}
+                                    </p>
+                                    {item.price && (
+                                      <p className="text-sm text-ink-light">
+                                        {item.currency || '$'}{item.price}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    {item.booking_confirmed ? (
+                                      <span className="flex items-center gap-1 text-sm text-green-600 mr-2">
+                                        <Check className="h-4 w-4" />
+                                        Booked
+                                      </span>
+                                    ) : item.booking_url ? (
                                       <a href={item.booking_url} target="_blank" rel="noopener noreferrer">
                                         <Button variant="outline" size="sm" className="gap-1">
-                                          View Booking
+                                          View
                                           <ExternalLink className="h-3 w-3" />
                                         </Button>
                                       </a>
@@ -314,32 +544,67 @@ export function TripDetail() {
                                         rel="noopener noreferrer"
                                       >
                                         <Button variant="outline" size="sm" className="gap-1">
-                                          Find & Book
+                                          Book
                                           <ExternalLink className="h-3 w-3" />
                                         </Button>
                                       </a>
                                     )}
-                                  </>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleEditItem(item)}
+                                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleDeleteItem(item.id)}
+                                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-ink-light hover:text-destructive"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                )}
+              </TabsContent>
+
+              {/* Expenses Tab */}
+              <TabsContent value="expenses">
+                <ExpensesTab tripId={id!} />
+              </TabsContent>
+
+              {/* Checklists Tab */}
+              <TabsContent value="checklists">
+                <ChecklistsTab tripId={id!} />
+              </TabsContent>
+
+              {/* Explore Tab */}
+              <TabsContent value="explore">
+                <ExploreTab
+                  tripId={id!}
+                  tripStartDate={trip.start_date}
+                  onAddToItinerary={reloadItems}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Book Travel */}
-            <Card className="border-primary/20 bg-primary/5">
-              <CardHeader>
+            <Card className="bg-sand p-6">
+              <CardHeader className="p-0 mb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Search className="h-5 w-5" />
+                  <CardTitle className="flex items-center gap-2 text-lg font-serif">
+                    <Search className="h-5 w-5 text-terracotta" />
                     Book Travel
                   </CardTitle>
                   <Button
@@ -352,12 +617,12 @@ export function TripDetail() {
                     {showSearchSettings ? 'Hide' : 'Edit'}
                   </Button>
                 </div>
-                <CardDescription>Find and book flights, hotels, and more</CardDescription>
+                <CardDescription className="text-ink-light mt-1">Find and book flights, hotels, and more</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-0">
                 {/* Editable Search Parameters */}
                 {showSearchSettings && (
-                  <div className="space-y-3 rounded-lg border bg-white p-3">
+                  <div className="space-y-3 rounded-xl border border-sand-dark bg-cream p-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <Label htmlFor="searchDepartDate" className="text-xs">Depart</Label>
@@ -569,34 +834,34 @@ export function TripDetail() {
             </Card>
 
             {/* Trip Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Trip Details</CardTitle>
+            <Card className="p-6">
+              <CardHeader className="p-0 mb-4">
+                <CardTitle className="text-lg font-serif">Trip Details</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-0">
                 <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                  <MapPin className="h-5 w-5 text-terracotta" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Destination</p>
+                    <p className="text-sm text-ink-light">Destination</p>
                     <p className="font-medium">{searchDestination.split(',')[0]}</p>
                     {searchOrigin && (
-                      <p className="text-xs text-muted-foreground">From: {searchOrigin}</p>
+                      <p className="text-xs text-ink-light">From: {searchOrigin}</p>
                     )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-muted-foreground" />
+                  <Calendar className="h-5 w-5 text-terracotta" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Dates</p>
+                    <p className="text-sm text-ink-light">Dates</p>
                     <p className="font-medium">
                       {searchDepartDate} - {searchReturnDate}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Users className="h-5 w-5 text-muted-foreground" />
+                  <Users className="h-5 w-5 text-terracotta" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Travelers</p>
+                    <p className="text-sm text-ink-light">Travelers</p>
                     <p className="font-medium">{searchTravelers} {searchTravelers === 1 ? 'person' : 'people'}</p>
                   </div>
                 </div>
@@ -604,12 +869,12 @@ export function TripDetail() {
             </Card>
 
             {/* Share Link */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Invite Others</CardTitle>
-                <CardDescription>Share this link to invite people to your trip</CardDescription>
+            <Card className="p-6">
+              <CardHeader className="p-0 mb-4">
+                <CardTitle className="text-lg font-serif">Invite Others</CardTitle>
+                <CardDescription className="text-ink-light mt-1">Share this link to invite people to your trip</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 <div className="flex gap-2">
                   <Input
                     readOnly
@@ -624,24 +889,24 @@ export function TripDetail() {
             </Card>
 
             {/* Trip Members */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Trip Members</CardTitle>
+            <Card className="p-6">
+              <CardHeader className="p-0 mb-4">
+                <CardTitle className="text-lg font-serif">Trip Members</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 {members.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No members yet. Share the link to invite people!</p>
+                  <p className="text-sm text-ink-light">No members yet. Share the link to invite people!</p>
                 ) : (
                   <div className="space-y-3">
                     {members.map((member) => (
                       <div key={member.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-forest/10 text-sm font-medium text-forest">
                             {member.user.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <p className="text-sm font-medium">{member.user.name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">{member.role}</p>
+                            <p className="text-xs text-ink-light capitalize">{member.role}</p>
                           </div>
                         </div>
                         <div className="text-right">
@@ -651,7 +916,7 @@ export function TripDetail() {
                               Confirmed
                             </span>
                           ) : (
-                            <span className="text-xs text-muted-foreground capitalize">{member.status}</span>
+                            <span className="text-xs text-ink-light capitalize">{member.status}</span>
                           )}
                         </div>
                       </div>

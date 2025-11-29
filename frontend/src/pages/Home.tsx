@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Globe, Users, Calendar, Share2, Plane, User, LogOut } from 'lucide-react'
+import { Card, CardDescription, CardTitle } from '@/components/ui/card'
+import { Users, Calendar, Share2, Plane, User, LogOut, Map, Wallet, Wifi, Sparkles } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { User as UserType } from '@/types'
 
@@ -30,180 +30,202 @@ export function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Hero Section */}
-      <header className="container mx-auto px-4 py-6">
-        <nav className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Globe className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">Triptab</span>
-          </div>
-          {!loading && (
-            <div className="flex items-center gap-4">
-              {user ? (
-                <>
-                  <Link to="/dashboard">
-                    <Button variant="ghost">My Trips</Button>
-                  </Link>
-                  <Link to="/plan">
-                    <Button variant="ghost">Plan a Trip</Button>
-                  </Link>
-                  <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-1.5">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{user.name}</span>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={handleLogout}>
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login">
-                    <Button variant="ghost">Log in</Button>
-                  </Link>
-                  <Link to="/register">
-                    <Button>Get Started</Button>
-                  </Link>
-                </>
-              )}
-            </div>
-          )}
-        </nav>
+    <div className="min-h-screen bg-sand">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-8 py-5 flex justify-between items-center bg-gradient-to-b from-sand to-transparent">
+        <Link to="/" className="flex items-center gap-2 font-serif text-2xl font-medium text-forest tracking-tight hover:text-terracotta transition-colors">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+          Triptab
+        </Link>
+        {!loading && (
+          <nav className="flex items-center gap-8">
+            {user ? (
+              <>
+                <Link to="/dashboard" className="text-ink-light text-sm font-medium hover:text-terracotta transition-colors">
+                  My Trips
+                </Link>
+                <Link to="/plan" className="text-ink-light text-sm font-medium hover:text-terracotta transition-colors">
+                  Plan a Trip
+                </Link>
+                <div className="flex items-center gap-2 rounded-full bg-cream px-3 py-1.5 shadow-sm">
+                  <User className="h-4 w-4 text-ink-light" />
+                  <span className="text-sm font-medium">{user.name}</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="text-ink-light text-sm font-medium hover:text-terracotta transition-colors">
+                  Log in
+                </Link>
+                <Link to="/register">
+                  <Button>Get Started</Button>
+                </Link>
+              </>
+            )}
+          </nav>
+        )}
       </header>
 
-      <main className="container mx-auto px-4">
-        {/* Hero */}
-        <section className="py-20 text-center">
-          <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-            Plan trips together,
-            <br />
-            <span className="text-primary">effortlessly</span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-600">
-            Create personalized travel itineraries, invite friends and family, and keep everyone
-            on the same page. From flights to experiences, Triptab has you covered.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-4">
-            <Link to="/plan">
-              <Button size="lg" className="gap-2">
-                <Calendar className="h-5 w-5" />
-                Start Planning
-              </Button>
-            </Link>
-            <Link to="/join">
-              <Button size="lg" variant="outline" className="gap-2">
-                <Share2 className="h-5 w-5" />
-                Join a Trip
-              </Button>
-            </Link>
+      {/* Hero Section */}
+      <section className="min-h-screen flex flex-col justify-center items-center px-8 pt-32 pb-16 text-center relative overflow-hidden">
+        {/* Floating cards - hidden on mobile and tablet */}
+        <div className="absolute inset-0 pointer-events-none hidden lg:block">
+          <div className="absolute top-[20%] left-[5%] bg-cream rounded-2xl p-3 shadow-lg animate-float" style={{ animationDelay: '0s' }}>
+            <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=240&h=160&fit=crop" alt="Kyoto temple" className="w-28 h-20 object-cover rounded-lg" />
+            <span className="block mt-2 text-xs text-ink-light">Kyoto, Japan</span>
           </div>
-        </section>
-
-        {/* Features */}
-        <section className="py-20">
-          <div className="grid gap-8 md:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <Calendar className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle>Smart Planning</CardTitle>
-                <CardDescription>
-                  Answer a few questions and we'll create a personalized itinerary based on your preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Solo, couple, friends, or family trips</li>
-                  <li>• Budget-conscious recommendations</li>
-                  <li>• Activity-based suggestions</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle>Collaborate</CardTitle>
-                <CardDescription>
-                  Share your trip with others and plan together in real-time
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Shareable invite links</li>
-                  <li>• See who's confirmed</li>
-                  <li>• Edit together</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <Plane className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle>All-in-One</CardTitle>
-                <CardDescription>
-                  Flights, hotels, experiences - manage everything in one place
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Drag and drop itinerary</li>
-                  <li>• Booking confirmations</li>
-                  <li>• Travel notes</li>
-                </ul>
-              </CardContent>
-            </Card>
+          <div className="absolute top-[30%] right-[5%] bg-cream rounded-2xl p-3 shadow-lg animate-float" style={{ animationDelay: '-2s' }}>
+            <img src="https://images.unsplash.com/photo-1534695215921-52f8a19e7909?w=240&h=160&fit=crop" alt="Santorini" className="w-28 h-20 object-cover rounded-lg" />
+            <span className="block mt-2 text-xs text-ink-light">Santorini, Greece</span>
           </div>
-        </section>
+          <div className="absolute bottom-[25%] left-[8%] bg-cream rounded-2xl p-3 shadow-lg animate-float" style={{ animationDelay: '-4s' }}>
+            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=240&h=160&fit=crop" alt="Swiss Alps" className="w-28 h-20 object-cover rounded-lg" />
+            <span className="block mt-2 text-xs text-ink-light">Swiss Alps</span>
+          </div>
+        </div>
 
-        {/* CTA */}
-        <section className="py-20 text-center">
-          <Card className="mx-auto max-w-2xl bg-primary text-primary-foreground">
-            <CardHeader>
-              <CardTitle className="text-3xl">
-                {user ? 'Ready for your next adventure?' : 'Ready to plan your next adventure?'}
-              </CardTitle>
-              <CardDescription className="text-primary-foreground/80">
-                {user
-                  ? 'Start planning a new trip or check out your existing ones'
-                  : 'Join thousands of travelers who plan smarter with Triptab'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center gap-4">
-              {user ? (
-                <>
-                  <Link to="/plan">
-                    <Button size="lg" variant="secondary">
-                      Plan New Trip
-                    </Button>
-                  </Link>
-                  <Link to="/dashboard">
-                    <Button size="lg" variant="secondary" className="bg-white/20 hover:bg-white/30">
-                      View My Trips
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                <Link to="/register">
-                  <Button size="lg" variant="secondary">
-                    Create Free Account
+
+        <h1 className="text-5xl md:text-7xl font-serif leading-tight text-ink max-w-4xl mb-6 tracking-tight animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          Plan your next <em className="italic text-terracotta">adventure</em> together
+        </h1>
+
+        <p className="text-lg text-ink-light max-w-lg leading-relaxed mb-10 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          Tell us where you want to go and what you love. We'll craft the perfect itinerary—no endless tabs, no spreadsheet chaos.
+        </p>
+
+        <div className="flex gap-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <Link to="/plan">
+            <Button size="lg" className="gap-2">
+              <Calendar className="h-5 w-5" />
+              Start Planning
+            </Button>
+          </Link>
+          <Link to="#features">
+            <Button size="lg" variant="outline" className="gap-2">
+              <Share2 className="h-5 w-5" />
+              See How It Works
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-24 px-8 max-w-6xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-serif mb-4 text-ink">Everything you need, nothing you don't</h2>
+          <p className="text-ink-light max-w-md mx-auto">Built for how you actually plan trips together.</p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-12">
+          <Card className="hover:-translate-y-2 hover:shadow-xl p-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-sand to-sand-dark rounded-xl flex items-center justify-center mb-4">
+              <Sparkles className="h-5 w-5 text-forest" />
+            </div>
+            <CardTitle className="text-lg mb-2">AI-Powered Suggestions</CardTitle>
+            <CardDescription className="text-sm leading-relaxed text-ink-light">
+              Tell us your vibe and we'll generate a personalized itinerary. No more endless research rabbit holes.
+            </CardDescription>
+          </Card>
+
+          <Card className="hover:-translate-y-2 hover:shadow-xl p-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-sand to-sand-dark rounded-xl flex items-center justify-center mb-4">
+              <Users className="h-5 w-5 text-forest" />
+            </div>
+            <CardTitle className="text-lg mb-2">Plan Together</CardTitle>
+            <CardDescription className="text-sm leading-relaxed text-ink-light">
+              Real-time collaboration. Both of you can add, edit, and shuffle things around. No more "did you see my message?"
+            </CardDescription>
+          </Card>
+
+          <Card className="hover:-translate-y-2 hover:shadow-xl p-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-sand to-sand-dark rounded-xl flex items-center justify-center mb-4">
+              <Map className="h-5 w-5 text-forest" />
+            </div>
+            <CardTitle className="text-lg mb-2">Visual Map View</CardTitle>
+            <CardDescription className="text-sm leading-relaxed text-ink-light">
+              See your whole trip on a map. Drag activities to reorder. Know exactly where you'll be each day.
+            </CardDescription>
+          </Card>
+
+          <Card className="hover:-translate-y-2 hover:shadow-xl p-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-sand to-sand-dark rounded-xl flex items-center justify-center mb-4">
+              <Wallet className="h-5 w-5 text-forest" />
+            </div>
+            <CardTitle className="text-lg mb-2">Budget Tracking</CardTitle>
+            <CardDescription className="text-sm leading-relaxed text-ink-light">
+              Set a budget, track spending as you go. Split costs automatically. No spreadsheet required.
+            </CardDescription>
+          </Card>
+
+          <Card className="hover:-translate-y-2 hover:shadow-xl p-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-sand to-sand-dark rounded-xl flex items-center justify-center mb-4">
+              <Wifi className="h-5 w-5 text-forest" />
+            </div>
+            <CardTitle className="text-lg mb-2">Works Offline</CardTitle>
+            <CardDescription className="text-sm leading-relaxed text-ink-light">
+              Access your itinerary anywhere, even without wifi. Because hotel wifi is always terrible.
+            </CardDescription>
+          </Card>
+
+          <Card className="hover:-translate-y-2 hover:shadow-xl p-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-sand to-sand-dark rounded-xl flex items-center justify-center mb-4">
+              <Plane className="h-5 w-5 text-forest" />
+            </div>
+            <CardTitle className="text-lg mb-2">Keep It Simple</CardTitle>
+            <CardDescription className="text-sm leading-relaxed text-ink-light">
+              No bloat. No upsells. Just a clean way to plan and remember your trips together.
+            </CardDescription>
+          </Card>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 md:py-24 px-6 md:px-8">
+        <Card className="mx-auto max-w-3xl bg-forest text-cream p-8 md:p-12 text-center">
+          <CardTitle className="text-2xl md:text-4xl font-serif text-cream mb-4">
+            {user ? 'Ready for your next adventure?' : 'Ready to plan your next adventure?'}
+          </CardTitle>
+          <CardDescription className="text-cream/80 text-base md:text-lg mb-8">
+            {user
+              ? 'Start planning a new trip or check out your existing ones'
+              : 'Join thousands of travelers who plan smarter with Triptab'}
+          </CardDescription>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            {user ? (
+              <>
+                <Link to="/plan">
+                  <Button size="lg" className="w-full sm:w-auto bg-cream text-forest hover:bg-cream/90">
+                    Plan New Trip
                   </Button>
                 </Link>
-              )}
-            </CardContent>
-          </Card>
-        </section>
-      </main>
+                <Link to="/dashboard">
+                  <Button size="lg" className="w-full sm:w-auto bg-cream/20 text-cream border-2 border-cream/50 hover:bg-cream/30">
+                    View My Trips
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <Link to="/register">
+                <Button size="lg" className="bg-cream text-forest hover:bg-cream/90">
+                  Create Free Account
+                </Button>
+              </Link>
+            )}
+          </div>
+        </Card>
+      </section>
 
-      <footer className="border-t py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>&copy; 2024 Triptab. Plan trips together, effortlessly.</p>
-        </div>
+      <footer className="py-12 border-t border-sand-dark text-center">
+        <p className="text-sm text-ink-light">
+          Made with <span className="text-terracotta">&#9829;</span> for adventures together
+        </p>
       </footer>
     </div>
   )

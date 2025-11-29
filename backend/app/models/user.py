@@ -26,3 +26,8 @@ class User(Base):
     # Relationships
     owned_trips = relationship("Trip", back_populates="owner", cascade="all, delete-orphan")
     trip_memberships = relationship("TripMember", back_populates="user", cascade="all, delete-orphan")
+    created_checklists = relationship("Checklist", back_populates="created_by")
+    assigned_checklist_items = relationship("ChecklistItem", back_populates="assigned_to")
+    paid_expenses = relationship("Expense", back_populates="paid_by")
+    expense_splits = relationship("ExpenseSplit", back_populates="user")
+    import_logs = relationship("ImportLog", back_populates="user")

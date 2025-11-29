@@ -60,6 +60,9 @@ class Trip(Base):
     owner = relationship("User", back_populates="owned_trips")
     members = relationship("TripMember", back_populates="trip", cascade="all, delete-orphan")
     itinerary_items = relationship("ItineraryItem", back_populates="trip", cascade="all, delete-orphan")
+    checklists = relationship("Checklist", back_populates="trip", cascade="all, delete-orphan")
+    expenses = relationship("Expense", back_populates="trip", cascade="all, delete-orphan")
+    import_logs = relationship("ImportLog", back_populates="trip", cascade="all, delete-orphan")
 
 
 class TripMember(Base):

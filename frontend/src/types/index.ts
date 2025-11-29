@@ -87,6 +87,150 @@ export interface PaginatedResponse<T> {
   total_pages: number
 }
 
+// Checklist types
+export type ChecklistType = 'packing' | 'todo' | 'shopping'
+
+export interface ChecklistItem {
+  id: string
+  checklist_id: string
+  content: string
+  is_completed: boolean
+  assigned_to_id?: string
+  order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface Checklist {
+  id: string
+  trip_id: string
+  name: string
+  type: ChecklistType
+  created_by_id: string
+  order: number
+  created_at: string
+  updated_at: string
+  items: ChecklistItem[]
+}
+
+// Expense types
+export type ExpenseCategory = 'food' | 'transport' | 'lodging' | 'activity' | 'shopping' | 'other'
+export type SplitType = 'equal' | 'percentage' | 'shares' | 'exact'
+
+export interface ExpenseSplit {
+  id: string
+  expense_id: string
+  user_id: string
+  amount: number
+  percentage?: number
+  shares?: number
+  is_settled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Expense {
+  id: string
+  trip_id: string
+  description: string
+  amount: number
+  currency: string
+  category: ExpenseCategory
+  paid_by_id: string
+  split_type: SplitType
+  expense_date: string
+  receipt_url?: string
+  notes?: string
+  created_at: string
+  updated_at: string
+  splits: ExpenseSplit[]
+}
+
+export interface UserBalance {
+  user_id: string
+  user_name: string
+  total_paid: number
+  total_owed: number
+  net_balance: number
+}
+
+export interface ExpenseSummary {
+  total_expenses: number
+  expense_count: number
+  balances: UserBalance[]
+}
+
+export interface Settlement {
+  from_user_id: string
+  from_user_name: string
+  to_user_id: string
+  to_user_name: string
+  amount: number
+}
+
+export interface SettlementPlan {
+  settlements: Settlement[]
+  total_transactions: number
+}
+
+// Import types
+export interface ParsedReservation {
+  type: 'flight' | 'hotel' | 'car' | 'activity' | 'restaurant'
+  title: string
+  start_date: string
+  end_date?: string
+  start_time?: string
+  end_time?: string
+  location?: string
+  confirmation_number?: string
+  flight_details?: {
+    airline?: string
+    flight_number?: string
+    departure_airport?: string
+    arrival_airport?: string
+    cabin_class?: string
+  }
+  hotel_details?: {
+    hotel_name?: string
+    address?: string
+    room_type?: string
+    check_in_time?: string
+    check_out_time?: string
+  }
+  notes?: string
+  confidence: number
+}
+
+export interface ImportLog {
+  id: string
+  trip_id: string
+  user_id: string
+  source: 'email_paste' | 'email_forward'
+  status: 'pending' | 'success' | 'partial' | 'failed'
+  error_message?: string
+  created_items?: string[]
+  created_at: string
+}
+
+// Recommendation types
+export interface Location {
+  lat: number
+  lng: number
+  address?: string
+}
+
+export interface Recommendation {
+  name: string
+  category: string
+  description: string
+  why_recommended: string
+  estimated_cost?: string
+  duration?: string
+  location?: Location
+  rating?: number
+  tags: string[]
+}
+
 // Auth types
 export interface LoginRequest {
   email: string
