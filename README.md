@@ -161,6 +161,10 @@ triptab/
 - `GET /trips/{id}/recommendations` - Get personalized recommendations
 - `POST /trips/{id}/recommendations/add` - Add to itinerary
 
+## TODO / Known Issues
+
+- [ ] **AI Recommendation Booking Links** - Hotel recommendations from AI currently generate invalid booking URLs. Need to improve the linking logic to generate proper affiliate/search URLs based on the recommended hotel name and location.
+
 ## License
 
 MIT
