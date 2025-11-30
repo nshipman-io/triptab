@@ -130,17 +130,17 @@ export function ExploreTab({ tripId, tripStartDate, tripDestination, onAddToItin
           )}
 
           {/* Guide Cards Carousel */}
-          <div className="relative group">
+          <div className="relative group overflow-hidden">
             {/* Scroll buttons */}
             <button
               onClick={() => scrollGuides('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1/2 hover:bg-white"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={() => scrollGuides('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity translate-x-1/2 hover:bg-white"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
