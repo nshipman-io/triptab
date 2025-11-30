@@ -6,7 +6,6 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import type { Trip, ItineraryItem, ItineraryItemType } from '@/types'
 import { cn } from '@/lib/utils'
@@ -98,8 +97,6 @@ export function ItineraryTab({
   showItemForm,
   itemFormContent,
 }: ItineraryTabProps) {
-  const [quickAddValue, setQuickAddValue] = useState('')
-  const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set())
 
   // Generate all days between trip start and end dates
@@ -156,16 +153,6 @@ export function ItineraryTab({
       }
       return next
     })
-  }
-
-  const handleQuickAdd = (dateString: string) => {
-    if (!quickAddValue.trim()) return
-    // For now, quick add creates an "experience" type item
-    // In a real implementation, you might want to parse the input
-    // or show a type selector
-    setSelectedDay(dateString)
-    onAddItem('experience', dateString)
-    setQuickAddValue('')
   }
 
   return (
@@ -244,32 +231,6 @@ export function ItineraryTab({
           <div className="mb-6">
             {itemFormContent}
           </div>
-        )}
-
-        {/* Quick Add Input */}
-        {canEdit && (
-          <Card className="mb-6 p-4">
-            <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-ink-light shrink-0" />
-              <Input
-                placeholder="Add a place"
-                value={quickAddValue}
-                onChange={(e) => setQuickAddValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && quickAddValue.trim()) {
-                    // Add to the first day or selected day
-                    handleQuickAdd(selectedDay || tripDays[0]?.dateString || trip.start_date.split('T')[0])
-                  }
-                }}
-                className="border-0 shadow-none focus-visible:ring-0 text-base placeholder:text-ink-light"
-              />
-              <div className="flex items-center gap-2 shrink-0">
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </Card>
         )}
 
         {/* Day Sections */}
