@@ -280,6 +280,116 @@ class ApiClient {
       body: JSON.stringify({ recommendation, date, time }),
     })
   }
+
+  // Guide endpoints
+  async getPublicGuides(destination?: string, limit: number = 20, offset: number = 0) {
+    const params = new URLSearchParams()
+    if (destination) params.append('destination', destination)
+    params.append('limit', limit.toString())
+    params.append('offset', offset.toString())
+    return this.request(`/guides?${params.toString()}`)
+  }
+
+  async getMyGuides() {
+    return this.request('/guides/my')
+  }
+
+  async getGuide(id: string) {
+    return this.request(`/guides/${id}`)
+  }
+
+  async getGuideByShareCode(shareCode: string) {
+    return this.request(`/guides/share/${shareCode}`)
+  }
+
+  async createGuide(data: {
+    title: string
+    description?: string
+    destination: string
+    cover_image_url?: string
+    visibility?: 'public' | 'private' | 'unlisted'
+    tags?: string[]
+  }) {
+    return this.request('/guides', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateGuide(id: string, data: Record<string, unknown>) {
+    return this.request(`/guides/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteGuide(id: string) {
+    return this.request(`/guides/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async incrementGuideViewCount(id: string) {
+    return this.request(`/guides/${id}/view`, {
+      method: 'POST',
+    })
+  }
+
+  // Guide section endpoints
+  async createGuideSection(guideId: string, data: { title: string; description?: string; order?: number }) {
+    return this.request(`/guides/${guideId}/sections`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateGuideSection(guideId: string, sectionId: string, data: Record<string, unknown>) {
+    return this.request(`/guides/${guideId}/sections/${sectionId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteGuideSection(guideId: string, sectionId: string) {
+    return this.request(`/guides/${guideId}/sections/${sectionId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async reorderGuideSections(guideId: string, sectionIds: string[]) {
+    return this.request(`/guides/${guideId}/sections/reorder`, {
+      method: 'PUT',
+      body: JSON.stringify({ item_ids: sectionIds }),
+    })
+  }
+
+  // Guide place endpoints
+  async createGuidePlace(guideId: string, sectionId: string, data: Record<string, unknown>) {
+    return this.request(`/guides/${guideId}/sections/${sectionId}/places`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateGuidePlace(guideId: string, sectionId: string, placeId: string, data: Record<string, unknown>) {
+    return this.request(`/guides/${guideId}/sections/${sectionId}/places/${placeId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteGuidePlace(guideId: string, sectionId: string, placeId: string) {
+    return this.request(`/guides/${guideId}/sections/${sectionId}/places/${placeId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async reorderGuidePlaces(guideId: string, sectionId: string, placeIds: string[]) {
+    return this.request(`/guides/${guideId}/sections/${sectionId}/places/reorder`, {
+      method: 'PUT',
+      body: JSON.stringify({ item_ids: placeIds }),
+    })
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL)

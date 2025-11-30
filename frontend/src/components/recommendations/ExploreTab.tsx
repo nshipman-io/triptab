@@ -1,47 +1,17 @@
-import { useState, useRef } from 'react'
-import { Compass, Loader2, MapPin, Clock, DollarSign, Plus, Star, Utensils, Ticket, Camera, Hotel, Search, ChevronRight, ChevronLeft } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Link } from 'react-router'
+import { Compass, Loader2, MapPin, Clock, DollarSign, Plus, Star, Utensils, Ticket, Camera, Hotel, Search, ChevronRight, ChevronLeft, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { api } from '@/lib/api'
-import type { Recommendation } from '@/types'
+import type { Recommendation, GuideSummary } from '@/types'
 
 const CATEGORY_OPTIONS = [
   { value: 'restaurants', label: 'Restaurants', icon: <Utensils className="h-4 w-4" /> },
   { value: 'activities', label: 'Activities', icon: <Ticket className="h-4 w-4" /> },
   { value: 'attractions', label: 'Attractions', icon: <Camera className="h-4 w-4" /> },
   { value: 'hotels', label: 'Hotels', icon: <Hotel className="h-4 w-4" /> },
-]
-
-// Sample travel guides data - in a real app, this would come from an API
-const SAMPLE_GUIDES = [
-  {
-    id: '1',
-    title: "Local's Guide to Hidden Gems",
-    description: 'Popular guide by a travel community member',
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
-    author: 'Travel Explorer',
-    duration: '5 days',
-    source: 'Community'
-  },
-  {
-    id: '2',
-    title: 'The Best 2 Week Itinerary',
-    description: 'Comprehensive 14 days itinerary',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop',
-    author: 'Web',
-    duration: '14 days',
-    source: 'Web'
-  },
-  {
-    id: '3',
-    title: 'Search hotels with transparent pricing',
-    description: 'Unlike most sites, we don\'t sort based on commissions',
-    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop',
-    author: 'TripTab',
-    duration: null,
-    source: 'TripTab'
-  },
 ]
 
 interface ExploreTabProps {
@@ -54,6 +24,8 @@ interface ExploreTabProps {
 
 export function ExploreTab({ tripId, tripStartDate, tripDestination, onAddToItinerary, canEdit = true }: ExploreTabProps) {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
+  const [guides, setGuides] = useState<GuideSummary[]>([])
+  const [guidesLoading, setGuidesLoading] = useState(true)
   const [loading, setLoading] = useState(false)
   const [category, setCategory] = useState('activities')
   const [addingIndex, setAddingIndex] = useState<number | null>(null)
@@ -61,6 +33,21 @@ export function ExploreTab({ tripId, tripStartDate, tripDestination, onAddToItin
   const [guidesExpanded, setGuidesExpanded] = useState(true)
   const [recommendationsExpanded, setRecommendationsExpanded] = useState(true)
   const guidesScrollRef = useRef<HTMLDivElement>(null)
+
+  // Load guides on mount
+  useEffect(() => {
+    const loadGuides = async () => {
+      try {
+        const data = await api.getPublicGuides(tripDestination, 10)
+        setGuides(data as GuideSummary[])
+      } catch (error) {
+        console.error('Failed to load guides:', error)
+      } finally {
+        setGuidesLoading(false)
+      }
+    }
+    loadGuides()
+  }, [tripDestination])
 
   const loadRecommendations = async () => {
     setLoading(true)
@@ -130,64 +117,99 @@ export function ExploreTab({ tripId, tripStartDate, tripDestination, onAddToItin
           )}
 
           {/* Guide Cards Carousel */}
-          <div className="relative group overflow-hidden">
-            {/* Scroll buttons */}
-            <button
-              onClick={() => scrollGuides('left')}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => scrollGuides('right')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-
-            {/* Scrollable container */}
-            <div
-              ref={guidesScrollRef}
-              className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {SAMPLE_GUIDES.map((guide) => (
-                <div
-                  key={guide.id}
-                  className="flex-shrink-0 w-64 snap-start cursor-pointer group/card"
-                >
-                  <div className="relative h-40 rounded-xl overflow-hidden mb-3">
-                    <img
-                      src={guide.image}
-                      alt={guide.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover/card:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  </div>
-                  <h3 className="font-medium text-ink text-sm line-clamp-2 mb-1">
-                    {guide.title}
-                  </h3>
-                  <p className="text-xs text-ink-light line-clamp-2 mb-2">
-                    {guide.description}
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-ink-light">
-                    <span className="flex items-center gap-1">
-                      <span className="w-5 h-5 rounded-full bg-sand-dark flex items-center justify-center text-[10px] font-medium">
-                        {guide.author.charAt(0)}
-                      </span>
-                      {guide.author}
-                    </span>
-                    {guide.duration && (
-                      <>
-                        <span>•</span>
-                        <span>{guide.duration}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
+          {guidesLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-forest" />
             </div>
-          </div>
+          ) : guides.length === 0 ? (
+            <div className="py-8 text-center">
+              <MapPin className="mx-auto h-10 w-10 text-ink-light mb-3" />
+              <p className="text-ink-light text-sm">
+                No guides available for this destination yet.
+              </p>
+              <p className="text-ink-light text-xs mt-1">
+                Be the first to create one!
+              </p>
+            </div>
+          ) : (
+            <div className="relative group overflow-hidden">
+              {/* Scroll buttons */}
+              <button
+                onClick={() => scrollGuides('left')}
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => scrollGuides('right')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+
+              {/* Scrollable container */}
+              <div
+                ref={guidesScrollRef}
+                className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {guides.map((guide) => (
+                  <Link
+                    key={guide.id}
+                    to={`/guides/${guide.id}`}
+                    className="flex-shrink-0 w-64 snap-start cursor-pointer group/card"
+                  >
+                    <div className="relative h-40 rounded-xl overflow-hidden mb-3">
+                      {guide.cover_image_url ? (
+                        <img
+                          src={guide.cover_image_url}
+                          alt={guide.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover/card:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-forest to-forest-light flex items-center justify-center">
+                          <MapPin className="h-8 w-8 text-cream/50" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      {/* View count badge */}
+                      <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/40 text-white text-xs px-2 py-1 rounded-full">
+                        <Eye className="h-3 w-3" />
+                        {guide.view_count}
+                      </div>
+                    </div>
+                    <h3 className="font-medium text-ink text-sm line-clamp-2 mb-1 group-hover/card:text-forest transition-colors">
+                      {guide.title}
+                    </h3>
+                    <p className="text-xs text-ink-light line-clamp-2 mb-2">
+                      {guide.description}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-ink-light">
+                      <span className="flex items-center gap-1">
+                        <span className="w-5 h-5 rounded-full bg-sand-dark flex items-center justify-center text-[10px] font-medium">
+                          {guide.author.avatar_url ? (
+                            <img
+                              src={guide.author.avatar_url}
+                              alt={guide.author.name}
+                              className="w-full h-full rounded-full object-cover"
+                            />
+                          ) : (
+                            guide.author.name.charAt(0).toUpperCase()
+                          )}
+                        </span>
+                        {guide.author.name}
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {guide.destination}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </CollapsibleContent>
       </Collapsible>
 
