@@ -14,6 +14,49 @@ const CATEGORY_OPTIONS = [
   { value: 'hotels', label: 'Hotels', icon: <Hotel className="h-4 w-4" /> },
 ]
 
+// Placeholder guides shown when no real guides exist
+const PLACEHOLDER_GUIDES: GuideSummary[] = [
+  {
+    id: 'placeholder-1',
+    title: "Local's Guide to Hidden Gems",
+    description: 'Discover off-the-beaten-path spots loved by locals',
+    destination: 'Costa Rica',
+    cover_image_url: 'https://images.unsplash.com/photo-1518259102261-b40117eabbc9?w=400&h=300&fit=crop',
+    visibility: 'public',
+    view_count: 1247,
+    tags: ['nature', 'adventure', 'wildlife'],
+    author: { id: 'system', name: 'TripTab', avatar_url: undefined },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'placeholder-2',
+    title: 'Ultimate 2 Week Itinerary',
+    description: 'A comprehensive guide covering the best of the country',
+    destination: 'Costa Rica',
+    cover_image_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop',
+    visibility: 'public',
+    view_count: 892,
+    tags: ['itinerary', 'beaches', 'rainforest'],
+    author: { id: 'system', name: 'TripTab', avatar_url: undefined },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'placeholder-3',
+    title: 'Best Restaurants & Food Guide',
+    description: 'From street food to fine dining - where to eat',
+    destination: 'Costa Rica',
+    cover_image_url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop',
+    visibility: 'public',
+    view_count: 634,
+    tags: ['food', 'restaurants', 'local cuisine'],
+    author: { id: 'system', name: 'TripTab', avatar_url: undefined },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+]
+
 interface ExploreTabProps {
   tripId: string
   tripStartDate: string
@@ -39,9 +82,27 @@ export function ExploreTab({ tripId, tripStartDate, tripDestination, onAddToItin
     const loadGuides = async () => {
       try {
         const data = await api.getPublicGuides(tripDestination, 10)
-        setGuides(data as GuideSummary[])
+        const fetchedGuides = data as GuideSummary[]
+        // Use placeholder guides if no real guides exist, customized with destination
+        if (fetchedGuides.length === 0 && tripDestination) {
+          const customizedPlaceholders = PLACEHOLDER_GUIDES.map(g => ({
+            ...g,
+            destination: tripDestination,
+          }))
+          setGuides(customizedPlaceholders)
+        } else {
+          setGuides(fetchedGuides)
+        }
       } catch (error) {
         console.error('Failed to load guides:', error)
+        // Show placeholders on error too
+        if (tripDestination) {
+          const customizedPlaceholders = PLACEHOLDER_GUIDES.map(g => ({
+            ...g,
+            destination: tripDestination,
+          }))
+          setGuides(customizedPlaceholders)
+        }
       } finally {
         setGuidesLoading(false)
       }
@@ -153,60 +214,70 @@ export function ExploreTab({ tripId, tripStartDate, tripDestination, onAddToItin
                 className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
-                {guides.map((guide) => (
-                  <Link
-                    key={guide.id}
-                    to={`/guides/${guide.id}`}
-                    className="flex-shrink-0 w-64 snap-start cursor-pointer group/card"
-                  >
-                    <div className="relative h-40 rounded-xl overflow-hidden mb-3">
-                      {guide.cover_image_url ? (
-                        <img
-                          src={guide.cover_image_url}
-                          alt={guide.title}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover/card:scale-105"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-forest to-forest-light flex items-center justify-center">
-                          <MapPin className="h-8 w-8 text-cream/50" />
+                {guides.map((guide) => {
+                  const isPlaceholder = guide.id.startsWith('placeholder-')
+                  const CardWrapper = isPlaceholder ? 'div' : Link
+                  const cardProps = isPlaceholder
+                    ? { className: "flex-shrink-0 w-64 snap-start group/card" }
+                    : { to: `/guides/${guide.id}`, className: "flex-shrink-0 w-64 snap-start cursor-pointer group/card" }
+
+                  return (
+                    <CardWrapper key={guide.id} {...cardProps as any}>
+                      <div className="relative h-40 rounded-xl overflow-hidden mb-3">
+                        {guide.cover_image_url ? (
+                          <img
+                            src={guide.cover_image_url}
+                            alt={guide.title}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover/card:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-forest to-forest-light flex items-center justify-center">
+                            <MapPin className="h-8 w-8 text-cream/50" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        {/* Coming soon badge for placeholders */}
+                        {isPlaceholder && (
+                          <div className="absolute top-2 left-2 bg-terracotta text-white text-xs px-2 py-1 rounded-full">
+                            Coming Soon
+                          </div>
+                        )}
+                        {/* View count badge */}
+                        <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/40 text-white text-xs px-2 py-1 rounded-full">
+                          <Eye className="h-3 w-3" />
+                          {guide.view_count}
                         </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      {/* View count badge */}
-                      <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/40 text-white text-xs px-2 py-1 rounded-full">
-                        <Eye className="h-3 w-3" />
-                        {guide.view_count}
                       </div>
-                    </div>
-                    <h3 className="font-medium text-ink text-sm line-clamp-2 mb-1 group-hover/card:text-forest transition-colors">
-                      {guide.title}
-                    </h3>
-                    <p className="text-xs text-ink-light line-clamp-2 mb-2">
-                      {guide.description}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-ink-light">
-                      <span className="flex items-center gap-1">
-                        <span className="w-5 h-5 rounded-full bg-sand-dark flex items-center justify-center text-[10px] font-medium">
-                          {guide.author.avatar_url ? (
-                            <img
-                              src={guide.author.avatar_url}
-                              alt={guide.author.name}
-                              className="w-full h-full rounded-full object-cover"
-                            />
-                          ) : (
-                            guide.author.name.charAt(0).toUpperCase()
-                          )}
+                      <h3 className="font-medium text-ink text-sm line-clamp-2 mb-1 group-hover/card:text-forest transition-colors">
+                        {guide.title}
+                      </h3>
+                      <p className="text-xs text-ink-light line-clamp-2 mb-2">
+                        {guide.description}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-ink-light">
+                        <span className="flex items-center gap-1">
+                          <span className="w-5 h-5 rounded-full bg-sand-dark flex items-center justify-center text-[10px] font-medium">
+                            {guide.author.avatar_url ? (
+                              <img
+                                src={guide.author.avatar_url}
+                                alt={guide.author.name}
+                                className="w-full h-full rounded-full object-cover"
+                              />
+                            ) : (
+                              guide.author.name.charAt(0).toUpperCase()
+                            )}
+                          </span>
+                          {guide.author.name}
                         </span>
-                        {guide.author.name}
-                      </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {guide.destination}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {guide.destination}
+                        </span>
+                      </div>
+                    </CardWrapper>
+                  )
+                })}
               </div>
             </div>
           )}
