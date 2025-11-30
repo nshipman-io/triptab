@@ -59,6 +59,9 @@ export function Dashboard() {
             Triptab
           </Link>
           <div className="flex items-center gap-2 md:gap-4">
+            <Link to="/guides" className="text-ink-light text-sm font-medium hover:text-terracotta transition-colors">
+              Guides
+            </Link>
             <div className="flex items-center gap-2 rounded-full bg-sand px-3 py-1.5">
               <span className="text-sm font-medium text-ink truncate max-w-24 md:max-w-none">
                 {user?.name}

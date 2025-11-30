@@ -467,7 +467,12 @@ export function TripDetail() {
 
               {/* Expenses Tab */}
               <TabsContent value="expenses">
-                <ExpensesTab tripId={id!} canEdit={canEdit} />
+                <ExpensesTab
+                  tripId={id!}
+                  members={members}
+                  currentUserId={currentUser?.id}
+                  canEdit={canEdit}
+                />
               </TabsContent>
 
               {/* Checklists Tab */}

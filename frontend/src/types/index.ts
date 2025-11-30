@@ -115,7 +115,7 @@ export interface Checklist {
 
 // Expense types
 export type ExpenseCategory = 'food' | 'transport' | 'lodging' | 'activity' | 'shopping' | 'other'
-export type SplitType = 'equal' | 'percentage' | 'shares' | 'exact'
+export type SplitType = 'equal' | 'percentage'
 
 export interface ExpenseSplit {
   id: string
@@ -123,7 +123,6 @@ export interface ExpenseSplit {
   user_id: string
   amount: number
   percentage?: number
-  shares?: number
   is_settled: boolean
   created_at: string
   updated_at: string
