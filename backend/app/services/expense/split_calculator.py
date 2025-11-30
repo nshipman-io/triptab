@@ -7,6 +7,8 @@ class SplitConfig(TypedDict, total=False):
     """Configuration for a single user's split."""
     user_id: str
     percentage: Decimal | None
+    shares: int | None
+    amount: Decimal | None
 
 
 class CalculatedSplit(TypedDict):
@@ -14,6 +16,7 @@ class CalculatedSplit(TypedDict):
     user_id: str
     amount: Decimal
     percentage: Decimal | None
+    shares: int | None
 
 
 def calculate_splits(
@@ -78,6 +81,7 @@ def _calculate_equal_split(
             'user_id': user_id,
             'amount': amount,
             'percentage': Decimal(100 / num_members).quantize(Decimal('0.01')),
+            'shares': 1,  # Equal split = 1 share each
         })
 
     return splits
@@ -113,6 +117,7 @@ def _calculate_percentage_split(
             'user_id': config['user_id'],
             'amount': amount,
             'percentage': percentage,
+            'shares': None,  # Percentage split doesn't use shares
         })
 
     return splits

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Query
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func, cast, String
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import DbSession, CurrentUser, CurrentUserOptional
@@ -50,7 +50,22 @@ async def list_public_guides(
     )
 
     if destination:
-        query = query.where(Guide.destination.ilike(f"%{destination}%"))
+        # Extract the first part before comma for more flexible matching
+        # e.g., "Costa Rica, Costa Rica" -> "Costa Rica"
+        # e.g., "Tokyo, Japan" -> "Tokyo"
+        search_term = destination.split(",")[0].strip().lower()
+
+        # Search in:
+        # 1. Guide destination field (ILIKE for case-insensitive)
+        # 2. Location tags array (cast to text and use ILIKE)
+        query = query.where(
+            or_(
+                Guide.destination.ilike(f"%{search_term}%"),
+                Guide.destination.ilike(f"%{destination}%"),
+                # Search in location_tags JSON array - cast to text for ILIKE search
+                cast(Guide.location_tags, String).ilike(f"%{search_term}%"),
+            )
+        )
 
     result = await db.execute(query)
     guides = result.scalars().all()

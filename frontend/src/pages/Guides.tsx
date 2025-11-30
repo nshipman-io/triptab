@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { MapPin, Eye, Search, LogOut, User, Menu, X, BookOpen } from 'lucide-react'
+import { MapPin, Eye, Search, LogOut, User, Menu, X, BookOpen, Plus } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { GuideSummary, User as UserType } from '@/types'
 
@@ -184,9 +184,17 @@ export function Guides() {
             <h1 className="text-3xl md:text-5xl font-serif text-ink mb-4">
               Travel Guides
             </h1>
-            <p className="text-ink-light max-w-lg mx-auto">
+            <p className="text-ink-light max-w-lg mx-auto mb-6">
               Discover curated travel guides from our community. Find hidden gems, local favorites, and insider tips.
             </p>
+            {user && (
+              <Link to="/guides/new">
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create Guide
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Search */}

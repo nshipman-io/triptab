@@ -298,6 +298,7 @@ export interface Guide {
   share_code: string
   view_count: number
   tags: string[]
+  location_tags: string[]
   author_id: string
   author: GuideAuthor
   created_at: string
@@ -314,6 +315,7 @@ export interface GuideSummary {
   visibility: GuideVisibility
   view_count: number
   tags: string[]
+  location_tags: string[]
   author: GuideAuthor
   created_at: string
   updated_at: string

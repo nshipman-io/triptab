@@ -269,17 +269,17 @@ export function ItineraryTab({
                           {day.formattedDate}
                         </h3>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground"
                         onClick={(e) => {
                           e.stopPropagation()
                           // Day options menu - could add more options here
                         }}
                       >
                         <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      </span>
                     </button>
                   </CollapsibleTrigger>
 

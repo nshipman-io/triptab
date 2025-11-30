@@ -17,6 +17,7 @@ PLACEHOLDER_GUIDES = [
         "destination": "Costa Rica",
         "cover_image_url": "https://images.unsplash.com/photo-1518259102261-b40117eabbc9?w=800&h=400&fit=crop",
         "tags": ["adventure", "nature", "beaches", "wildlife"],
+        "location_tags": ["costa rica", "central america", "san jose", "manuel antonio", "monteverde", "arenal", "la fortuna", "guanacaste"],
         "sections": [
             {
                 "title": "Must-Visit Beaches",
@@ -88,6 +89,7 @@ PLACEHOLDER_GUIDES = [
         "destination": "Cancun, Mexico",
         "cover_image_url": "https://images.unsplash.com/photo-1552074284-5e88ef1aef18?w=800&h=400&fit=crop",
         "tags": ["beaches", "history", "culture", "food"],
+        "location_tags": ["cancun", "mexico", "riviera maya", "tulum", "playa del carmen", "quintana roo", "yucatan", "chichen itza", "caribbean"],
         "sections": [
             {
                 "title": "Ancient Mayan Sites",
@@ -160,6 +162,7 @@ PLACEHOLDER_GUIDES = [
         "destination": "Japan",
         "cover_image_url": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&h=400&fit=crop",
         "tags": ["culture", "food", "temples", "nature"],
+        "location_tags": ["japan", "tokyo", "kyoto", "osaka", "asia", "shibuya", "shinjuku", "asakusa", "arashiyama", "fushimi inari", "nara"],
         "sections": [
             {
                 "title": "Tokyo Highlights",
@@ -292,6 +295,7 @@ async def seed_guides():
                 cover_image_url=guide_data["cover_image_url"],
                 visibility=GuideVisibility.PUBLIC,
                 tags=guide_data["tags"],
+                location_tags=guide_data.get("location_tags", []),
                 author_id=user.id,
                 view_count=0
             )

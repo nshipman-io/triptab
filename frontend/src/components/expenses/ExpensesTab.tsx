@@ -34,7 +34,8 @@ export function ExpensesTab({ tripId, members, currentUserId, canEdit = true }: 
         api.getExpenseSummary(tripId),
         api.getSettlements(tripId),
       ])
-      setExpenses(expensesData as Expense[])
+      console.log('Expenses data:', expensesData)
+      setExpenses(Array.isArray(expensesData) ? expensesData as Expense[] : [])
       setSummary(summaryData as ExpenseSummary)
       setSettlements(settlementsData as SettlementPlan)
     } catch (error) {
@@ -103,7 +104,7 @@ export function ExpensesTab({ tripId, members, currentUserId, canEdit = true }: 
             <CardHeader className="pb-2">
               <CardDescription>Total Expenses</CardDescription>
               <CardTitle className="text-2xl">
-                ${summary.total_expenses.toFixed(2)}
+                ${Number(summary.total_expenses).toFixed(2)}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -127,7 +128,7 @@ export function ExpensesTab({ tripId, members, currentUserId, canEdit = true }: 
                       "text-2xl",
                       userBalance.net_balance > 0 ? "text-green-600" : userBalance.net_balance < 0 ? "text-red-600" : ""
                     )}>
-                      {userBalance.net_balance >= 0 ? '+' : ''}${userBalance.net_balance.toFixed(2)}
+                      {userBalance.net_balance >= 0 ? '+' : ''}${Number(userBalance.net_balance).toFixed(2)}
                     </CardTitle>
                   </>
                 ) : null
@@ -190,7 +191,7 @@ export function ExpensesTab({ tripId, members, currentUserId, canEdit = true }: 
                     <span className="font-medium text-sm sm:text-base truncate max-w-20 sm:max-w-none">{settlement.to_user_name}</span>
                   </div>
                   <span className="font-semibold text-green-600 text-right">
-                    ${settlement.amount.toFixed(2)}
+                    ${Number(settlement.amount).toFixed(2)}
                   </span>
                 </div>
               ))}

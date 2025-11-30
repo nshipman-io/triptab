@@ -100,6 +100,7 @@ class GuideCreate(BaseModel):
     cover_image_url: str | None = None
     visibility: GuideVisibilityEnum = "public"
     tags: list[str] = []
+    location_tags: list[str] = []
 
 
 class GuideUpdate(BaseModel):
@@ -109,6 +110,7 @@ class GuideUpdate(BaseModel):
     cover_image_url: str | None = None
     visibility: GuideVisibilityEnum | None = None
     tags: list[str] | None = None
+    location_tags: list[str] | None = None
 
 
 class AuthorResponse(BaseModel):
@@ -130,6 +132,7 @@ class GuideResponse(BaseModel):
     share_code: str
     view_count: int
     tags: list[str]
+    location_tags: list[str]
     author_id: str
     author: AuthorResponse
     created_at: datetime
@@ -150,6 +153,7 @@ class GuideSummaryResponse(BaseModel):
     visibility: str
     view_count: int
     tags: list[str]
+    location_tags: list[str]
     author: AuthorResponse
     created_at: datetime
     updated_at: datetime

@@ -309,6 +309,7 @@ class ApiClient {
     cover_image_url?: string
     visibility?: 'public' | 'private' | 'unlisted'
     tags?: string[]
+    location_tags?: string[]
   }) {
     return this.request('/guides', {
       method: 'POST',

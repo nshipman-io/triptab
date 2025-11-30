@@ -161,6 +161,130 @@ async def create_expense(
     return expense
 
 
+# IMPORTANT: These routes MUST come before /{expense_id} routes
+# Otherwise "summary" and "settlements" get matched as expense_id
+
+@router.get("/summary", response_model=ExpenseSummary)
+async def get_expense_summary(
+    trip_id: str,
+    current_user: CurrentUser,
+    db: DbSession
+):
+    """Get expense summary with balances for all trip members."""
+    await check_trip_access(trip_id, current_user.id, db)
+
+    # Get all expenses with splits
+    result = await db.execute(
+        select(Expense)
+        .options(selectinload(Expense.splits))
+        .where(Expense.trip_id == trip_id)
+    )
+    expenses = result.scalars().all()
+
+    # Get user names
+    member_ids = await get_trip_member_ids(trip_id, db)
+    result = await db.execute(
+        select(User).where(User.id.in_(member_ids))
+    )
+    users = {user.id: user.name for user in result.scalars().all()}
+
+    # Calculate totals and balances
+    total_expenses = sum(e.amount for e in expenses)
+    expense_count = len(expenses)
+
+    # Track paid and owed per user
+    paid_by_user: dict[str, Decimal] = {uid: Decimal(0) for uid in member_ids}
+    owed_by_user: dict[str, Decimal] = {uid: Decimal(0) for uid in member_ids}
+
+    for expense in expenses:
+        paid_by_user[expense.paid_by_id] = paid_by_user.get(expense.paid_by_id, Decimal(0)) + expense.amount
+
+        for split in expense.splits:
+            if not split.is_settled:
+                owed_by_user[split.user_id] = owed_by_user.get(split.user_id, Decimal(0)) + split.amount
+
+    balances = [
+        UserBalance(
+            user_id=uid,
+            user_name=users.get(uid, "Unknown"),
+            total_paid=paid_by_user.get(uid, Decimal(0)),
+            total_owed=owed_by_user.get(uid, Decimal(0)),
+            net_balance=paid_by_user.get(uid, Decimal(0)) - owed_by_user.get(uid, Decimal(0)),
+        )
+        for uid in member_ids
+    ]
+
+    return ExpenseSummary(
+        total_expenses=total_expenses,
+        expense_count=expense_count,
+        balances=balances,
+    )
+
+
+@router.get("/settlements", response_model=SettlementPlan)
+async def get_settlement_plan(
+    trip_id: str,
+    current_user: CurrentUser,
+    db: DbSession
+):
+    """Get optimized settlement plan to minimize transactions."""
+    await check_trip_access(trip_id, current_user.id, db)
+
+    # Get all expenses with splits
+    result = await db.execute(
+        select(Expense)
+        .options(selectinload(Expense.splits))
+        .where(Expense.trip_id == trip_id)
+    )
+    expenses = result.scalars().all()
+
+    # Get user names
+    member_ids = await get_trip_member_ids(trip_id, db)
+    result = await db.execute(
+        select(User).where(User.id.in_(member_ids))
+    )
+    users = {user.id: user.name for user in result.scalars().all()}
+
+    # Convert to format expected by settlement calculator
+    expenses_data = [
+        {
+            'paid_by_id': e.paid_by_id,
+            'amount': e.amount,
+            'splits': [
+                {
+                    'user_id': s.user_id,
+                    'amount': s.amount,
+                    'is_settled': s.is_settled,
+                }
+                for s in e.splits
+            ]
+        }
+        for e in expenses
+    ]
+
+    # Calculate balances and optimize settlements
+    balances = calculate_balances(expenses_data)
+    optimal_settlements = optimize_settlements(balances)
+
+    settlements = [
+        Settlement(
+            from_user_id=s.from_user_id,
+            from_user_name=users.get(s.from_user_id, "Unknown"),
+            to_user_id=s.to_user_id,
+            to_user_name=users.get(s.to_user_id, "Unknown"),
+            amount=s.amount,
+        )
+        for s in optimal_settlements
+    ]
+
+    return SettlementPlan(
+        settlements=settlements,
+        total_transactions=len(settlements),
+    )
+
+
+# Routes with {expense_id} path parameter come AFTER static routes
+
 @router.get("/{expense_id}", response_model=ExpenseResponse)
 async def get_expense(
     trip_id: str,
@@ -287,125 +411,6 @@ async def delete_expense(
     await db.flush()
 
     return {"message": "Expense deleted"}
-
-
-@router.get("/summary", response_model=ExpenseSummary)
-async def get_expense_summary(
-    trip_id: str,
-    current_user: CurrentUser,
-    db: DbSession
-):
-    """Get expense summary with balances for all trip members."""
-    await check_trip_access(trip_id, current_user.id, db)
-
-    # Get all expenses with splits
-    result = await db.execute(
-        select(Expense)
-        .options(selectinload(Expense.splits))
-        .where(Expense.trip_id == trip_id)
-    )
-    expenses = result.scalars().all()
-
-    # Get user names
-    member_ids = await get_trip_member_ids(trip_id, db)
-    result = await db.execute(
-        select(User).where(User.id.in_(member_ids))
-    )
-    users = {user.id: user.name for user in result.scalars().all()}
-
-    # Calculate totals and balances
-    total_expenses = sum(e.amount for e in expenses)
-    expense_count = len(expenses)
-
-    # Track paid and owed per user
-    paid_by_user: dict[str, Decimal] = {uid: Decimal(0) for uid in member_ids}
-    owed_by_user: dict[str, Decimal] = {uid: Decimal(0) for uid in member_ids}
-
-    for expense in expenses:
-        paid_by_user[expense.paid_by_id] = paid_by_user.get(expense.paid_by_id, Decimal(0)) + expense.amount
-
-        for split in expense.splits:
-            if not split.is_settled:
-                owed_by_user[split.user_id] = owed_by_user.get(split.user_id, Decimal(0)) + split.amount
-
-    balances = [
-        UserBalance(
-            user_id=uid,
-            user_name=users.get(uid, "Unknown"),
-            total_paid=paid_by_user.get(uid, Decimal(0)),
-            total_owed=owed_by_user.get(uid, Decimal(0)),
-            net_balance=paid_by_user.get(uid, Decimal(0)) - owed_by_user.get(uid, Decimal(0)),
-        )
-        for uid in member_ids
-    ]
-
-    return ExpenseSummary(
-        total_expenses=total_expenses,
-        expense_count=expense_count,
-        balances=balances,
-    )
-
-
-@router.get("/settlements", response_model=SettlementPlan)
-async def get_settlement_plan(
-    trip_id: str,
-    current_user: CurrentUser,
-    db: DbSession
-):
-    """Get optimized settlement plan to minimize transactions."""
-    await check_trip_access(trip_id, current_user.id, db)
-
-    # Get all expenses with splits
-    result = await db.execute(
-        select(Expense)
-        .options(selectinload(Expense.splits))
-        .where(Expense.trip_id == trip_id)
-    )
-    expenses = result.scalars().all()
-
-    # Get user names
-    member_ids = await get_trip_member_ids(trip_id, db)
-    result = await db.execute(
-        select(User).where(User.id.in_(member_ids))
-    )
-    users = {user.id: user.name for user in result.scalars().all()}
-
-    # Convert to format expected by settlement calculator
-    expenses_data = [
-        {
-            'paid_by_id': e.paid_by_id,
-            'amount': e.amount,
-            'splits': [
-                {
-                    'user_id': s.user_id,
-                    'amount': s.amount,
-                    'is_settled': s.is_settled,
-                }
-                for s in e.splits
-            ]
-        }
-        for e in expenses
-    ]
-
-    # Calculate balances and optimize settlements
-    balances = calculate_balances(expenses_data)
-    optimal_settlements = optimize_settlements(balances)
-
-    settlements = [
-        Settlement(
-            from_user_id=s.from_user_id,
-            from_user_name=users.get(s.from_user_id, "Unknown"),
-            to_user_id=s.to_user_id,
-            to_user_name=users.get(s.to_user_id, "Unknown"),
-            amount=s.amount,
-        )
-        for s in optimal_settlements
-    ]
-
-    return SettlementPlan(
-        settlements=settlements,
-        total_transactions=len(settlements),
-    )
 
 
 @router.post("/{expense_id}/settle")

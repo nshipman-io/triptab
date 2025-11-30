@@ -38,6 +38,7 @@ class Guide(Base):
     )
     view_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     tags: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    location_tags: Mapped[list] = mapped_column(JSON, nullable=False, default=list)  # For location-based search
     author_id: Mapped[str] = mapped_column(
         String(36),
         ForeignKey("users.id", ondelete="CASCADE"),
