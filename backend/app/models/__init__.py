@@ -4,6 +4,7 @@ from app.models.itinerary import ItineraryItem
 from app.models.checklist import Checklist, ChecklistItem, ChecklistType
 from app.models.expense import Expense, ExpenseSplit, ExpenseCategory, SplitType
 from app.models.import_log import ImportLog, ImportSource, ImportStatus
+from app.models.guide import Guide, GuideSection, GuidePlace, GuideVisibility
 
 __all__ = [
     "User",
@@ -20,4 +21,8 @@ __all__ = [
     "ImportLog",
     "ImportSource",
     "ImportStatus",
+    "Guide",
+    "GuideSection",
+    "GuidePlace",
+    "GuideVisibility",
 ]

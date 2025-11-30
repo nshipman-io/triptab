@@ -3,17 +3,19 @@ import { Plus, DollarSign, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { api } from '@/lib/api'
-import type { Expense, ExpenseSummary, SettlementPlan } from '@/types'
+import type { Expense, ExpenseSummary, SettlementPlan, TripMember } from '@/types'
 import { ExpenseCard } from './ExpenseCard'
 import { ExpenseForm } from './ExpenseForm'
 import { cn } from '@/lib/utils'
 
 interface ExpensesTabProps {
   tripId: string
+  members: TripMember[]
+  currentUserId?: string
   canEdit?: boolean
 }
 
-export function ExpensesTab({ tripId, canEdit = true }: ExpensesTabProps) {
+export function ExpensesTab({ tripId, members, currentUserId, canEdit = true }: ExpensesTabProps) {
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [summary, setSummary] = useState<ExpenseSummary | null>(null)
   const [settlements, setSettlements] = useState<SettlementPlan | null>(null)
@@ -32,7 +34,8 @@ export function ExpensesTab({ tripId, canEdit = true }: ExpensesTabProps) {
         api.getExpenseSummary(tripId),
         api.getSettlements(tripId),
       ])
-      setExpenses(expensesData as Expense[])
+      console.log('Expenses data:', expensesData)
+      setExpenses(Array.isArray(expensesData) ? expensesData as Expense[] : [])
       setSummary(summaryData as ExpenseSummary)
       setSettlements(settlementsData as SettlementPlan)
     } catch (error) {
@@ -101,7 +104,7 @@ export function ExpensesTab({ tripId, canEdit = true }: ExpensesTabProps) {
             <CardHeader className="pb-2">
               <CardDescription>Total Expenses</CardDescription>
               <CardTitle className="text-2xl">
-                ${summary.total_expenses.toFixed(2)}
+                ${Number(summary.total_expenses).toFixed(2)}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -115,19 +118,33 @@ export function ExpensesTab({ tripId, canEdit = true }: ExpensesTabProps) {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Your Balance</CardDescription>
-              {summary.balances.length > 0 && (
-                <CardTitle className={cn(
-                  "text-2xl",
-                  summary.balances[0].net_balance > 0 ? "text-green-600" : summary.balances[0].net_balance < 0 ? "text-red-600" : ""
-                )}>
-                  {summary.balances[0].net_balance >= 0 ? '+' : ''}${summary.balances[0].net_balance.toFixed(2)}
-                </CardTitle>
-              )}
+              {(() => {
+                const userBalance = currentUserId
+                  ? summary.balances.find(b => b.user_id === currentUserId)
+                  : summary.balances[0]
+                return userBalance ? (
+                  <>
+                    <CardTitle className={cn(
+                      "text-2xl",
+                      userBalance.net_balance > 0 ? "text-green-600" : userBalance.net_balance < 0 ? "text-red-600" : ""
+                    )}>
+                      {userBalance.net_balance >= 0 ? '+' : ''}${Number(userBalance.net_balance).toFixed(2)}
+                    </CardTitle>
+                  </>
+                ) : null
+              })()}
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground">
-                {summary.balances[0]?.net_balance >= 0 ? 'You are owed' : 'You owe'}
-              </p>
+              {(() => {
+                const userBalance = currentUserId
+                  ? summary.balances.find(b => b.user_id === currentUserId)
+                  : summary.balances[0]
+                return (
+                  <p className="text-xs text-muted-foreground">
+                    {userBalance?.net_balance != null && userBalance.net_balance >= 0 ? 'You are owed' : 'You owe'}
+                  </p>
+                )
+              })()}
             </CardContent>
           </Card>
 
@@ -174,7 +191,7 @@ export function ExpensesTab({ tripId, canEdit = true }: ExpensesTabProps) {
                     <span className="font-medium text-sm sm:text-base truncate max-w-20 sm:max-w-none">{settlement.to_user_name}</span>
                   </div>
                   <span className="font-semibold text-green-600 text-right">
-                    ${settlement.amount.toFixed(2)}
+                    ${Number(settlement.amount).toFixed(2)}
                   </span>
                 </div>
               ))}
@@ -187,6 +204,7 @@ export function ExpensesTab({ tripId, canEdit = true }: ExpensesTabProps) {
       {canEdit && (showForm || editingExpense) && (
         <ExpenseForm
           expense={editingExpense}
+          members={members}
           onSubmit={editingExpense ? handleUpdateExpense : handleCreateExpense}
           onCancel={() => {
             setShowForm(false)

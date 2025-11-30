@@ -19,8 +19,6 @@ class ExpenseCategory(str, enum.Enum):
 class SplitType(str, enum.Enum):
     EQUAL = "equal"
     PERCENTAGE = "percentage"
-    SHARES = "shares"
-    EXACT = "exact"
 
 
 class Expense(Base):

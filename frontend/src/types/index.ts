@@ -115,7 +115,7 @@ export interface Checklist {
 
 // Expense types
 export type ExpenseCategory = 'food' | 'transport' | 'lodging' | 'activity' | 'shopping' | 'other'
-export type SplitType = 'equal' | 'percentage' | 'shares' | 'exact'
+export type SplitType = 'equal' | 'percentage'
 
 export interface ExpenseSplit {
   id: string
@@ -123,7 +123,6 @@ export interface ExpenseSplit {
   user_id: string
   amount: number
   percentage?: number
-  shares?: number
   is_settled: boolean
   created_at: string
   updated_at: string
@@ -247,4 +246,77 @@ export interface AuthResponse {
   access_token: string
   token_type: string
   user: User
+}
+
+// Guide types
+export type GuideVisibility = 'public' | 'private' | 'unlisted'
+
+export interface GuideAuthor {
+  id: string
+  name: string
+  avatar_url?: string
+}
+
+export interface GuidePlace {
+  id: string
+  section_id: string
+  name: string
+  description?: string
+  category?: string
+  address?: string
+  latitude?: number
+  longitude?: number
+  place_id?: string
+  place_data?: Record<string, unknown>
+  notes?: string
+  tips?: string
+  price_range?: string
+  photo_url?: string
+  order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface GuideSection {
+  id: string
+  guide_id: string
+  title: string
+  description?: string
+  order: number
+  created_at: string
+  updated_at: string
+  places: GuidePlace[]
+}
+
+export interface Guide {
+  id: string
+  title: string
+  description?: string
+  destination: string
+  cover_image_url?: string
+  visibility: GuideVisibility
+  share_code: string
+  view_count: number
+  tags: string[]
+  location_tags: string[]
+  author_id: string
+  author: GuideAuthor
+  created_at: string
+  updated_at: string
+  sections: GuideSection[]
+}
+
+export interface GuideSummary {
+  id: string
+  title: string
+  description?: string
+  destination: string
+  cover_image_url?: string
+  visibility: GuideVisibility
+  view_count: number
+  tags: string[]
+  location_tags: string[]
+  author: GuideAuthor
+  created_at: string
+  updated_at: string
 }

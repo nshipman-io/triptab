@@ -1,4 +1,4 @@
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP, ROUND_DOWN
 from typing import TypedDict
 from app.models.expense import SplitType
 
@@ -29,7 +29,7 @@ def calculate_splits(
 
     Args:
         total_amount: Total expense amount
-        split_type: Type of split (equal, percentage, shares, exact)
+        split_type: Type of split (equal or percentage)
         member_ids: List of member user IDs to split among
         split_configs: Optional configuration for each member's split
 
@@ -47,16 +47,6 @@ def calculate_splits(
             raise ValueError("Percentage splits require split_configs")
         return _calculate_percentage_split(total_amount, split_configs)
 
-    elif split_type == SplitType.SHARES:
-        if not split_configs:
-            raise ValueError("Shares splits require split_configs")
-        return _calculate_shares_split(total_amount, split_configs)
-
-    elif split_type == SplitType.EXACT:
-        if not split_configs:
-            raise ValueError("Exact splits require split_configs")
-        return _calculate_exact_split(total_amount, split_configs)
-
     else:
         raise ValueError(f"Unknown split type: {split_type}")
 
@@ -65,23 +55,33 @@ def _calculate_equal_split(
     total_amount: Decimal,
     member_ids: list[str],
 ) -> list[CalculatedSplit]:
-    """Split equally among all members."""
+    """Split equally among all members using remainder distribution."""
     num_members = len(member_ids)
-    base_amount = (total_amount / num_members).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    # Use ROUND_DOWN to avoid over-allocation, then distribute remainder
+    base_amount = (total_amount / num_members).quantize(Decimal('0.01'), rounding=ROUND_DOWN)
     remainder = total_amount - (base_amount * num_members)
+    # Convert remainder to cents for distribution
+    remainder_cents = int(remainder * 100)
 
     splits = []
+    running_total = Decimal(0)
+
     for i, user_id in enumerate(member_ids):
-        amount = base_amount
-        # Distribute remainder cents to first few members
-        if i < int(remainder * 100):
-            amount += Decimal('0.01')
+        if i == num_members - 1:
+            # Last person gets whatever remains to ensure exact total
+            amount = total_amount - running_total
+        else:
+            amount = base_amount
+            # Distribute remainder cents to first few members
+            if i < remainder_cents:
+                amount += Decimal('0.01')
+            running_total += amount
 
         splits.append({
             'user_id': user_id,
             'amount': amount,
             'percentage': Decimal(100 / num_members).quantize(Decimal('0.01')),
-            'shares': None,
+            'shares': 1,  # Equal split = 1 share each
         })
 
     return splits
@@ -117,73 +117,7 @@ def _calculate_percentage_split(
             'user_id': config['user_id'],
             'amount': amount,
             'percentage': percentage,
-            'shares': None,
-        })
-
-    return splits
-
-
-def _calculate_shares_split(
-    total_amount: Decimal,
-    split_configs: list[SplitConfig],
-) -> list[CalculatedSplit]:
-    """Split by shares (e.g., 2 shares for adults, 1 for kids)."""
-    total_shares = sum(
-        config.get('shares', 1) or 1
-        for config in split_configs
-    )
-
-    if total_shares <= 0:
-        raise ValueError("Total shares must be positive")
-
-    splits = []
-    running_total = Decimal(0)
-
-    for i, config in enumerate(split_configs):
-        shares = config.get('shares', 1) or 1
-
-        if i == len(split_configs) - 1:
-            # Last person gets the remainder
-            amount = total_amount - running_total
-        else:
-            amount = (total_amount * shares / total_shares).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            running_total += amount
-
-        percentage = Decimal(shares * 100 / total_shares).quantize(Decimal('0.01'))
-
-        splits.append({
-            'user_id': config['user_id'],
-            'amount': amount,
-            'percentage': percentage,
-            'shares': shares,
-        })
-
-    return splits
-
-
-def _calculate_exact_split(
-    total_amount: Decimal,
-    split_configs: list[SplitConfig],
-) -> list[CalculatedSplit]:
-    """Split by exact amounts."""
-    total_specified = sum(
-        config.get('amount', Decimal(0)) or Decimal(0)
-        for config in split_configs
-    )
-
-    if abs(total_specified - total_amount) > Decimal('0.01'):
-        raise ValueError(f"Exact amounts must sum to total ({total_amount}), got {total_specified}")
-
-    splits = []
-    for config in split_configs:
-        amount = config.get('amount', Decimal(0)) or Decimal(0)
-        percentage = (amount / total_amount * 100).quantize(Decimal('0.01')) if total_amount else Decimal(0)
-
-        splits.append({
-            'user_id': config['user_id'],
-            'amount': amount,
-            'percentage': percentage,
-            'shares': None,
+            'shares': None,  # Percentage split doesn't use shares
         })
 
     return splits

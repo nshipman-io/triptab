@@ -6,6 +6,9 @@ import { Dashboard } from '@/pages/Dashboard'
 import { PlanTrip } from '@/pages/PlanTrip'
 import { TripDetail } from '@/pages/TripDetail'
 import { JoinTrip } from '@/pages/JoinTrip'
+import { Guides } from '@/pages/Guides'
+import { CreateGuide } from '@/pages/CreateGuide'
+import { GuideView } from '@/pages/GuideView'
 
 function App() {
   return (
@@ -18,6 +21,9 @@ function App() {
         <Route path="/plan" element={<PlanTrip />} />
         <Route path="/trips/:id" element={<TripDetail />} />
         <Route path="/join/:shareCode" element={<JoinTrip />} />
+        <Route path="/guides" element={<Guides />} />
+        <Route path="/guides/new" element={<CreateGuide />} />
+        <Route path="/guides/:id" element={<GuideView />} />
       </Routes>
     </BrowserRouter>
   )

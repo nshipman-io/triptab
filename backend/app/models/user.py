@@ -31,3 +31,4 @@ class User(Base):
     paid_expenses = relationship("Expense", back_populates="paid_by")
     expense_splits = relationship("ExpenseSplit", back_populates="user")
     import_logs = relationship("ImportLog", back_populates="user")
+    guides = relationship("Guide", back_populates="author", cascade="all, delete-orphan")

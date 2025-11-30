@@ -58,7 +58,7 @@ export function ExpenseCard({ expense, onEdit, onDelete, canEdit = true }: Expen
         <div className="text-right">
           <p className="font-semibold">
             {expense.currency === 'USD' ? '$' : expense.currency}
-            {expense.amount.toFixed(2)}
+            {Number(expense.amount).toFixed(2)}
           </p>
           <p className="text-xs text-muted-foreground">
             {expense.splits.length} {expense.splits.length === 1 ? 'person' : 'people'}

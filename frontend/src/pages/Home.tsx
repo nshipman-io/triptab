@@ -55,6 +55,9 @@ export function Home() {
                 <Link to="/plan" className="text-ink-light text-sm font-medium hover:text-terracotta transition-colors">
                   Plan a Trip
                 </Link>
+                <Link to="/guides" className="text-ink-light text-sm font-medium hover:text-terracotta transition-colors">
+                  Guides
+                </Link>
                 <div className="flex items-center gap-2 rounded-full bg-cream px-3 py-1.5 shadow-sm">
                   <User className="h-4 w-4 text-ink-light" />
                   <span className="text-sm font-medium">{user.name}</span>
@@ -65,6 +68,9 @@ export function Home() {
               </>
             ) : (
               <>
+                <Link to="/guides" className="text-ink-light text-sm font-medium hover:text-terracotta transition-colors">
+                  Guides
+                </Link>
                 <Link to="/login" className="text-ink-light text-sm font-medium hover:text-terracotta transition-colors">
                   Log in
                 </Link>
@@ -114,6 +120,13 @@ export function Home() {
                 >
                   Plan a Trip
                 </Link>
+                <Link
+                  to="/guides"
+                  className="block px-3 py-2 text-ink hover:bg-sand rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Guides
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 w-full px-3 py-2 text-ink-light hover:bg-sand rounded-lg transition-colors"
@@ -124,6 +137,13 @@ export function Home() {
               </>
             ) : (
               <>
+                <Link
+                  to="/guides"
+                  className="block px-3 py-2 text-ink hover:bg-sand rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Guides
+                </Link>
                 <Link
                   to="/login"
                   className="block px-3 py-2 text-ink hover:bg-sand rounded-lg transition-colors"
