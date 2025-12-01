@@ -4,17 +4,19 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { MapPin, Loader2, X, Search } from 'lucide-react'
 
-interface NominatimResult {
-  place_id: number
-  display_name: string
-  name: string
-  type: string
-  address: {
+interface PhotonResult {
+  geometry: {
+    coordinates: [number, number] // [lon, lat]
+  }
+  properties: {
+    osm_id: number
+    name?: string
     city?: string
     town?: string
     village?: string
     state?: string
     country?: string
+    type?: string
   }
 }
 
@@ -34,7 +36,7 @@ export function PlacesAutocomplete({
   disabled = false,
 }: PlacesAutocompleteProps) {
   const [inputValue, setInputValue] = useState(value)
-  const [results, setResults] = useState<NominatimResult[]>([])
+  const [results, setResults] = useState<PhotonResult[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
@@ -107,29 +109,36 @@ export function PlacesAutocomplete({
     setIsLoading(true)
 
     try {
+      // Photon API - optimized for autocomplete
+      // Filter to cities, towns, villages for better destination results
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?` +
+        `https://photon.komoot.io/api/?` +
         new URLSearchParams({
           q: input,
-          format: 'json',
-          addressdetails: '1',
-          limit: '5',
-        }),
-        {
-          headers: {
-            'Accept-Language': 'en',
-          },
-        }
+          limit: '6',
+          lang: 'en',
+        })
       )
 
       if (!response.ok) {
         throw new Error('Failed to fetch places')
       }
 
-      const data: NominatimResult[] = await response.json()
-      setResults(data)
+      const data = await response.json()
+      const features: PhotonResult[] = data.features || []
+
+      // Filter to show mainly cities/towns/villages for destination selection
+      const filtered = features.filter((f: PhotonResult) => {
+        const type = f.properties.type
+        return ['city', 'town', 'village', 'locality', 'district', 'state', 'country'].includes(type || '')
+      })
+
+      // If filtering removed all results, show original results
+      const resultsToShow = filtered.length > 0 ? filtered : features.slice(0, 5)
+
+      setResults(resultsToShow)
       // Only auto-open dropdown on desktop
-      if (data.length > 0 && window.innerWidth >= 768) {
+      if (resultsToShow.length > 0 && window.innerWidth >= 768) {
         setIsOpen(true)
       }
     } catch (error) {
@@ -140,7 +149,8 @@ export function PlacesAutocomplete({
     }
   }
 
-  const fetchResults = useDebouncedCallback(searchPlaces, 400)
+  // Faster debounce for better autocomplete experience
+  const fetchResults = useDebouncedCallback(searchPlaces, 200)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value
@@ -156,13 +166,15 @@ export function PlacesAutocomplete({
     fetchResults(newValue)
   }
 
-  const formatDisplayName = (result: NominatimResult): { main: string; secondary: string } => {
-    const address = result.address
-    const cityName = address.city || address.town || address.village || result.name
+  const formatDisplayName = (result: PhotonResult): { main: string; secondary: string } => {
+    const props = result.properties
+    // Use the most specific name available
+    const cityName = props.name || props.city || props.town || props.village || ''
     const parts = []
 
-    if (address.state) parts.push(address.state)
-    if (address.country) parts.push(address.country)
+    // Add state if different from main name
+    if (props.state && props.state !== cityName) parts.push(props.state)
+    if (props.country) parts.push(props.country)
 
     return {
       main: cityName,
@@ -170,14 +182,14 @@ export function PlacesAutocomplete({
     }
   }
 
-  const handleSelectResult = (result: NominatimResult) => {
+  const handleSelectResult = (result: PhotonResult) => {
     const formatted = formatDisplayName(result)
     const fullName = formatted.secondary
       ? `${formatted.main}, ${formatted.secondary}`
       : formatted.main
 
     setInputValue(fullName)
-    onChange(fullName, result.place_id.toString())
+    onChange(fullName, result.properties.osm_id?.toString())
     setResults([])
     setIsOpen(false)
     setMobileModalOpen(false)
@@ -267,7 +279,7 @@ export function PlacesAutocomplete({
                 const formatted = formatDisplayName(result)
                 return (
                   <li
-                    key={result.place_id}
+                    key={`${result.properties.osm_id}-${index}`}
                     role="option"
                     aria-selected={index === selectedIndex}
                     onMouseDown={(e) => {
@@ -297,7 +309,7 @@ export function PlacesAutocomplete({
               })}
             </ul>
             <div className="border-t px-3 py-2 text-xs text-gray-400">
-              Data © OpenStreetMap contributors
+              Powered by Photon • Data © OpenStreetMap
             </div>
           </div>
         )}
@@ -357,7 +369,7 @@ export function PlacesAutocomplete({
                   const formatted = formatDisplayName(result)
                   return (
                     <li
-                      key={result.place_id}
+                      key={`${result.properties.osm_id}-${index}`}
                       role="option"
                       aria-selected={index === selectedIndex}
                       onClick={() => handleSelectResult(result)}
@@ -404,7 +416,7 @@ export function PlacesAutocomplete({
           {/* Attribution footer */}
           <div className="bg-cream border-t border-sand-dark px-4 py-2 safe-area-bottom">
             <p className="text-xs text-ink-light text-center">
-              Data © OpenStreetMap contributors
+              Powered by Photon • Data © OpenStreetMap
             </p>
           </div>
         </div>
