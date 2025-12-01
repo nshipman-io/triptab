@@ -57,6 +57,19 @@ async def get_current_user_optional(
     return result.scalar_one_or_none()
 
 
+async def get_admin_user(
+    current_user: Annotated[User, Depends(get_current_user)]
+) -> User:
+    """Require admin access - raises 403 if user is not an admin."""
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_user
+
+
 CurrentUser = Annotated[User, Depends(get_current_user)]
 CurrentUserOptional = Annotated[User | None, Depends(get_current_user_optional)]
+AdminUser = Annotated[User, Depends(get_admin_user)]
 DbSession = Annotated[AsyncSession, Depends(get_db)]
