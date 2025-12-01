@@ -133,7 +133,7 @@ export function Privacy() {
             </p>
             <p className="text-ink-light mt-4">
               nshipman LLC<br />
-              Email: privacy@triptab.io
+              Email: support@triptab.io
             </p>
           </section>
         </div>

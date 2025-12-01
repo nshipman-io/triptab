@@ -162,7 +162,7 @@ export function Terms() {
             </p>
             <p className="text-ink-light mt-4">
               nshipman LLC<br />
-              Email: legal@triptab.io
+              Email: support@triptab.io
             </p>
           </section>
         </div>
