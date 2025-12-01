@@ -1,0 +1,22 @@
+---
+# View logs from production
+# Usage: ansible-playbook playbooks/logs.yml
+
+- name: View Triptab Logs
+  hosts: triptab
+  become: yes
+
+  vars:
+    app_dir: /opt/triptab
+    lines: 100
+
+  tasks:
+    - name: Get recent logs
+      command: docker compose logs --tail={{ lines }}
+      args:
+        chdir: "{{ app_dir }}"
+      register: logs
+
+    - name: Print logs
+      debug:
+        var: logs.stdout_lines

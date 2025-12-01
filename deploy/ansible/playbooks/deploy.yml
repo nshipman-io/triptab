@@ -1,0 +1,54 @@
+---
+# Deploy latest images - run for each deployment
+# Usage: ansible-playbook playbooks/deploy.yml
+
+- name: Deploy Triptab
+  hosts: triptab
+  become: yes
+
+  vars:
+    app_dir: /opt/triptab
+
+  tasks:
+    - name: Copy docker-compose.prod.yml
+      copy:
+        src: ../../../docker-compose.prod.yml
+        dest: "{{ app_dir }}/docker-compose.yml"
+        mode: '0644'
+
+    - name: Copy nginx config
+      copy:
+        src: ../../../nginx.prod.conf
+        dest: "{{ app_dir }}/nginx.prod.conf"
+        mode: '0644'
+      register: nginx_config
+
+    - name: Pull latest images
+      command: docker compose pull
+      args:
+        chdir: "{{ app_dir }}"
+
+    - name: Start services
+      command: docker compose up -d
+      args:
+        chdir: "{{ app_dir }}"
+
+    - name: Reload nginx if config changed
+      command: docker compose exec -T nginx nginx -s reload
+      args:
+        chdir: "{{ app_dir }}"
+      when: nginx_config.changed
+      ignore_errors: yes
+
+    - name: Prune old images
+      command: docker image prune -f
+
+    - name: Show running containers
+      command: docker compose ps
+      args:
+        chdir: "{{ app_dir }}"
+      register: compose_ps
+
+    - name: Print status
+      debug:
+        var: compose_ps.stdout_lines
