@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router'
-import { Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Shield, ShieldOff } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -38,6 +38,7 @@ export function AdminUsers() {
   const [sortBy, setSortBy] = useState<SortField>('created_at')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [page, setPage] = useState(1)
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
@@ -86,6 +87,29 @@ export function AdminUsers() {
     setPage(1)
   }
 
+  const handleToggleAdmin = async (user: UserListItem) => {
+    if (updatingUserId) return
+
+    setUpdatingUserId(user.id)
+    try {
+      await api.setUserAdminStatus(user.id, !user.is_admin)
+      // Update local state
+      setData((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          users: prev.users.map((u) =>
+            u.id === user.id ? { ...u, is_admin: !u.is_admin } : u
+          ),
+        }
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update admin status')
+    } finally {
+      setUpdatingUserId(null)
+    }
+  }
+
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortBy !== field) return null
     return sortOrder === 'asc' ? (
@@ -115,6 +139,19 @@ export function AdminUsers() {
             {data ? `${data.total} total users` : 'Loading...'}
           </p>
         </div>
+
+        {/* Error Toast */}
+        {error && data && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+            <button
+              onClick={() => setError(null)}
+              className="float-right font-bold"
+            >
+              &times;
+            </button>
+          </div>
+        )}
 
         {/* Search */}
         <div className="relative max-w-md">
@@ -167,18 +204,21 @@ export function AdminUsers() {
                         Joined <SortIcon field="created_at" />
                       </div>
                     </th>
+                    <th className="text-center px-6 py-3 text-xs font-semibold text-ink-light uppercase tracking-wider">
+                      Admin
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-sand">
                   {loading && !data ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-ink-light">
+                      <td colSpan={7} className="px-6 py-8 text-center text-ink-light">
                         Loading...
                       </td>
                     </tr>
                   ) : data?.users.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-ink-light">
+                      <td colSpan={7} className="px-6 py-8 text-center text-ink-light">
                         No users found
                       </td>
                     </tr>
@@ -209,6 +249,29 @@ export function AdminUsers() {
                             month: 'short',
                             day: 'numeric',
                           })}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <Button
+                            variant={user.is_admin ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => handleToggleAdmin(user)}
+                            disabled={updatingUserId === user.id}
+                            className="w-24"
+                          >
+                            {updatingUserId === user.id ? (
+                              '...'
+                            ) : user.is_admin ? (
+                              <>
+                                <ShieldOff className="h-3 w-3 mr-1" />
+                                Revoke
+                              </>
+                            ) : (
+                              <>
+                                <Shield className="h-3 w-3 mr-1" />
+                                Grant
+                              </>
+                            )}
+                          </Button>
                         </td>
                       </tr>
                     ))

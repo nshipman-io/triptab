@@ -437,6 +437,13 @@ class ApiClient {
     if (params.limit) searchParams.append('limit', params.limit.toString())
     return this.request(`/admin/guides?${searchParams.toString()}`)
   }
+
+  async setUserAdminStatus(userId: string, isAdmin: boolean) {
+    return this.request(`/admin/users/${userId}/admin`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_admin: isAdmin }),
+    })
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL)

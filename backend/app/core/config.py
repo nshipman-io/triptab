@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
 
+    # Admin user (created on startup if password is set)
+    ADMIN_EMAIL: str = "triptab-admin@triptab.io"
+    ADMIN_PASSWORD: str = ""  # Set via ADMIN_PASSWORD env var
+
     # CORS
     CORS_ORIGINS: list[str] = [
         "http://localhost:5173",

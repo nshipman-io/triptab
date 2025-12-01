@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta, date
 from typing import Optional
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func
 
 from app.api.deps import AdminUser, DbSession
 from app.models.user import User
@@ -353,4 +353,56 @@ async def get_admin_guides(
         unlisted_guides=unlisted_guides,
         total_views=total_views,
         guides=guides
+    )
+
+
+# --- Admin Management ---
+
+class SetAdminRequest(BaseModel):
+    is_admin: bool
+
+
+class SetAdminResponse(BaseModel):
+    id: str
+    email: str
+    name: str
+    is_admin: bool
+
+
+@router.patch("/users/{user_id}/admin", response_model=SetAdminResponse)
+async def set_user_admin_status(
+    user_id: str,
+    request: SetAdminRequest,
+    admin: AdminUser,
+    db: DbSession
+):
+    """Grant or revoke admin access for a user."""
+
+    # Find the user
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # Prevent removing your own admin access
+    if user.id == admin.id and not request.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot remove your own admin access"
+        )
+
+    # Update admin status
+    user.is_admin = request.is_admin
+    await db.commit()
+    await db.refresh(user)
+
+    return SetAdminResponse(
+        id=str(user.id),
+        email=user.email,
+        name=user.name,
+        is_admin=user.is_admin
     )
