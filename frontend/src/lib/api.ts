@@ -73,6 +73,13 @@ class ApiClient {
     })
   }
 
+  async googleAuth(credential: string) {
+    return this.request<{ access_token: string; user: { id: string; email: string; name: string } }>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ credential }),
+    })
+  }
+
   async getCurrentUser() {
     return this.request('/auth/me')
   }

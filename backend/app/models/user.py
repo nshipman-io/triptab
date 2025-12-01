@@ -15,8 +15,10 @@ class User(Base):
     )
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Nullable for OAuth users
     avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    auth_provider: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 'google', 'email', etc.
+    provider_id: Mapped[str | None] = mapped_column(String(255), nullable=True)  # OAuth provider user ID
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,

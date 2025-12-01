@@ -14,6 +14,11 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # Build stage
 FROM base AS build
+
+# Build args for Vite environment variables
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+
 COPY . .
 RUN npm run build
 

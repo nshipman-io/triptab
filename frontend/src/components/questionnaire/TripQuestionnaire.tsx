@@ -197,7 +197,19 @@ export function TripQuestionnaire() {
                 id="start-date"
                 type="date"
                 value={preferences.start_date}
-                onChange={(e) => setPreferences({ ...preferences, start_date: e.target.value })}
+                onChange={(e) => {
+                  const newStartDate = e.target.value
+                  const updates: Partial<TripPreferences> = { start_date: newStartDate }
+                  // If end date is before new start date, update it to match
+                  if (preferences.end_date && preferences.end_date < newStartDate) {
+                    updates.end_date = newStartDate
+                  }
+                  // If no end date set, default it to start date
+                  if (!preferences.end_date) {
+                    updates.end_date = newStartDate
+                  }
+                  setPreferences({ ...preferences, ...updates })
+                }}
               />
             </div>
             <div className="space-y-2">
