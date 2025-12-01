@@ -30,7 +30,7 @@ PLACEHOLDER_GUIDES = [
                         "address": "Champ de Mars, 5 Avenue Anatole France",
                         "tips": "Book tickets online to skip the line. Visit at sunset for golden hour photos.",
                         "price_range": "$25-40",
-                        "photo_url": "https://images.unsplash.com/photo-1511739001486-6bfe10ce65f4?w=400&h=300&fit=crop"
+                        "photo_url": "https://images.unsplash.com/photo-1431274172761-fca41d930114?w=400&h=300&fit=crop"
                     },
                     {
                         "name": "Louvre Museum",
@@ -221,7 +221,7 @@ PLACEHOLDER_GUIDES = [
                         "address": "Pecatu, South Kuta",
                         "tips": "Watch out for monkeys - they steal sunglasses! Stay for the Kecak dance at 6pm.",
                         "price_range": "$5 + $15 for dance",
-                        "photo_url": "https://images.unsplash.com/photo-1588625500633-a0251d388fd7?w=400&h=300&fit=crop"
+                        "photo_url": "https://images.unsplash.com/photo-1604999333679-b86d54738315?w=400&h=300&fit=crop"
                     },
                     {
                         "name": "Tirta Empul",
@@ -312,7 +312,7 @@ PLACEHOLDER_GUIDES = [
                         "address": "Tower Hill, London EC3N 4AB",
                         "tips": "Book online to skip lines. Join a free Yeoman Warder tour - they're hilarious!",
                         "price_range": "$35",
-                        "photo_url": "https://images.unsplash.com/photo-1574178626862-01dbec1db169?w=400&h=300&fit=crop"
+                        "photo_url": "https://images.unsplash.com/photo-1520986606214-8b456906c813?w=400&h=300&fit=crop"
                     },
                     {
                         "name": "Westminster Abbey",
@@ -336,7 +336,7 @@ PLACEHOLDER_GUIDES = [
                         "address": "Great Russell St, Bloomsbury",
                         "tips": "Don't try to see everything. Pick a few galleries. The Egyptian collection is incredible.",
                         "price_range": "Free",
-                        "photo_url": "https://images.unsplash.com/photo-1574178626862-01dbec1db169?w=400&h=300&fit=crop"
+                        "photo_url": "https://images.unsplash.com/photo-1520986606214-8b456906c813?w=400&h=300&fit=crop"
                     },
                     {
                         "name": "Tate Modern",
@@ -345,7 +345,7 @@ PLACEHOLDER_GUIDES = [
                         "address": "Bankside, London SE1 9TG",
                         "tips": "Free to enter. Great views from the 10th floor viewing platform.",
                         "price_range": "Free",
-                        "photo_url": "https://images.unsplash.com/photo-1569880153113-76e33fc52b5f?w=400&h=300&fit=crop"
+                        "photo_url": "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400&h=300&fit=crop"
                     }
                 ]
             },
@@ -731,7 +731,7 @@ PLACEHOLDER_GUIDES = [
                         "address": "218 Anren Street, Huangpu",
                         "tips": "Go early morning to avoid crowds. Have xiaolongbao at the nearby bazaar.",
                         "price_range": "$5",
-                        "photo_url": "https://images.unsplash.com/photo-1517309246364-c7f2e6de5fa5?w=400&h=300&fit=crop"
+                        "photo_url": "https://images.unsplash.com/photo-1548919973-5cef591cdbc9?w=400&h=300&fit=crop"
                     }
                 ]
             },
@@ -780,7 +780,7 @@ PLACEHOLDER_GUIDES = [
                         "address": "Ocho Rios, St. Ann",
                         "tips": "Wear water shoes with good grip. Go early to beat the cruise ship crowds.",
                         "price_range": "$25",
-                        "photo_url": "https://images.unsplash.com/photo-1530841344345-9c6257e97e75?w=400&h=300&fit=crop"
+                        "photo_url": "https://images.unsplash.com/photo-1494548162494-384bba4ab999?w=400&h=300&fit=crop"
                     }
                 ]
             },
@@ -820,7 +820,7 @@ PLACEHOLDER_GUIDES = [
         "title": "Puerto Rico: Isla del Encanto",
         "description": "Old San Juan's colorful streets, bioluminescent bays, and pristine beaches in this US Caribbean territory.",
         "destination": "Puerto Rico",
-        "cover_image_url": "https://images.unsplash.com/photo-1579687196544-08ae57ab5b00?w=800&h=400&fit=crop",
+        "cover_image_url": "https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?w=800&h=400&fit=crop",
         "tags": ["beaches", "history", "food", "nature"],
         "location_tags": ["puerto rico", "caribbean", "san juan", "old san juan", "vieques", "el yunque", "rincon", "culebra"],
         "sections": [
@@ -835,7 +835,7 @@ PLACEHOLDER_GUIDES = [
                         "address": "Old San Juan, Puerto Rico",
                         "tips": "Wear comfortable shoes for the hills. Best explored on foot.",
                         "price_range": "Free",
-                        "photo_url": "https://images.unsplash.com/photo-1579687196544-08ae57ab5b00?w=400&h=300&fit=crop"
+                        "photo_url": "https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?w=400&h=300&fit=crop"
                     },
                     {
                         "name": "El Morro Fort",
@@ -868,7 +868,7 @@ PLACEHOLDER_GUIDES = [
                         "address": "Vieques or Fajardo",
                         "tips": "Go on a moonless night. Vieques has the brightest bay.",
                         "price_range": "$60 for kayak tour",
-                        "photo_url": "https://images.unsplash.com/photo-1580758908602-02c4c5080c29?w=400&h=300&fit=crop"
+                        "photo_url": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop"
                     }
                 ]
             },
