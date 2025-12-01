@@ -302,10 +302,16 @@ export function Home() {
         </Card>
       </section>
 
-      <footer className="py-12 border-t border-sand-dark text-center">
-        <p className="text-sm text-ink-light">
-          Made with <span className="text-terracotta">&#9829;</span> for adventures together
-        </p>
+      <footer className="py-12 border-t border-sand-dark">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-ink-light">
+            Made with <span className="text-terracotta">&#9829;</span> for adventures together
+          </p>
+          <div className="flex gap-6 text-sm text-ink-light">
+            <Link to="/privacy" className="hover:text-terracotta transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-terracotta transition-colors">Terms of Service</Link>
+          </div>
+        </div>
       </footer>
     </div>
   )
