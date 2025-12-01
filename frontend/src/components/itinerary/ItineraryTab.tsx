@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import {
   Plane, Hotel, MapPin, Utensils, Car, Calendar, Plus,
-  Check, GripVertical, ExternalLink, Mail, Pencil, Trash2,
+  Check, GripVertical, Mail, Pencil, Trash2,
   ChevronRight, MoreHorizontal
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -9,13 +9,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import type { Trip, ItineraryItem, ItineraryItemType } from '@/types'
 import { cn } from '@/lib/utils'
-import {
-  getFlightSearchLinks,
-  getHotelSearchLinks,
-  getExperienceSearchLinks,
-  getOpenTableUrl,
-  getRentalCarsUrl,
-} from '@/lib/affiliates'
 
 const ITEM_ICONS: Record<ItineraryItemType, React.ReactNode> = {
   flight: <Plane className="h-4 w-4" />,
@@ -31,38 +24,6 @@ const ITEM_COLORS: Record<ItineraryItemType, string> = {
   experience: 'bg-green-100 text-green-700',
   restaurant: 'bg-orange-100 text-orange-700',
   transport: 'bg-gray-100 text-gray-700',
-}
-
-function getItemBookingLink(item: ItineraryItem, trip: Trip): string | null {
-  const destination = item.location || trip.destination
-
-  switch (item.type) {
-    case 'flight':
-      return getFlightSearchLinks({
-        destination,
-        departDate: item.start_time,
-        returnDate: item.end_time || trip.end_date,
-        adults: trip.preferences.num_travelers,
-      }).googleFlights
-    case 'hotel':
-      return getHotelSearchLinks({
-        destination,
-        checkIn: item.start_time,
-        checkOut: item.end_time || trip.end_date,
-        guests: trip.preferences.num_travelers,
-      }).bookingCom
-    case 'experience':
-      return getExperienceSearchLinks({
-        destination,
-        date: item.start_time,
-      }).viator
-    case 'restaurant':
-      return getOpenTableUrl(destination, item.start_time, trip.preferences.num_travelers)
-    case 'transport':
-      return getRentalCarsUrl(destination, item.start_time, item.end_time || trip.end_date)
-    default:
-      return null
-  }
 }
 
 interface DayData {
@@ -337,29 +298,11 @@ export function ItineraryTab({
                                 )}
                               </div>
                               <div className="flex items-center gap-1">
-                                {item.booking_confirmed ? (
+                                {item.booking_confirmed && (
                                   <span className="flex items-center gap-1 text-xs sm:text-sm text-green-600 mr-1 sm:mr-2">
                                     <Check className="h-3 w-3 sm:h-4 sm:w-4" />
                                     <span className="hidden sm:inline">Booked</span>
                                   </span>
-                                ) : item.booking_url ? (
-                                  <a href={item.booking_url} target="_blank" rel="noopener noreferrer">
-                                    <Button variant="outline" size="sm" className="gap-1 h-8 text-xs">
-                                      View
-                                      <ExternalLink className="h-3 w-3" />
-                                    </Button>
-                                  </a>
-                                ) : (
-                                  <a
-                                    href={getItemBookingLink(item, trip) || '#'}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Button variant="outline" size="sm" className="gap-1 h-8 text-xs">
-                                      Book
-                                      <ExternalLink className="h-3 w-3" />
-                                    </Button>
-                                  </a>
                                 )}
                                 {canEdit && (
                                   <>

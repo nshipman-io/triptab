@@ -9,6 +9,8 @@ import { JoinTrip } from '@/pages/JoinTrip'
 import { Guides } from '@/pages/Guides'
 import { CreateGuide } from '@/pages/CreateGuide'
 import { GuideView } from '@/pages/GuideView'
+import { Privacy } from '@/pages/Privacy'
+import { Terms } from '@/pages/Terms'
 
 function App() {
   return (
@@ -24,6 +26,8 @@ function App() {
         <Route path="/guides" element={<Guides />} />
         <Route path="/guides/new" element={<CreateGuide />} />
         <Route path="/guides/:id" element={<GuideView />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
       </Routes>
     </BrowserRouter>
   )

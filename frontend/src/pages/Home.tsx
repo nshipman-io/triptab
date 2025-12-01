@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
-import { Users, Calendar, Plane, User, LogOut, Map, Wallet, Wifi, Sparkles, Menu, X } from 'lucide-react'
+import { Users, Calendar, Plane, User, LogOut, Map, Wallet, Sparkles, Menu, X } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { User as UserType } from '@/types'
 
@@ -246,11 +246,11 @@ export function Home() {
 
           <Card className="hover:-translate-y-2 hover:shadow-xl p-4 md:p-6">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-sand to-sand-dark rounded-xl flex items-center justify-center mb-3 md:mb-4">
-              <Wifi className="h-4 w-4 md:h-5 md:w-5 text-forest" />
+              <Map className="h-4 w-4 md:h-5 md:w-5 text-forest" />
             </div>
-            <CardTitle className="text-base md:text-lg mb-2">Works Offline</CardTitle>
+            <CardTitle className="text-base md:text-lg mb-2">Create Guides</CardTitle>
             <CardDescription className="text-sm leading-relaxed text-ink-light">
-              Access your itinerary anywhere, even without wifi.
+              Share your favorite spots and recommendations with fellow travelers.
             </CardDescription>
           </Card>
 
@@ -302,10 +302,16 @@ export function Home() {
         </Card>
       </section>
 
-      <footer className="py-12 border-t border-sand-dark text-center">
-        <p className="text-sm text-ink-light">
-          Made with <span className="text-terracotta">&#9829;</span> for adventures together
-        </p>
+      <footer className="py-12 border-t border-sand-dark">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-ink-light">
+            Made with <span className="text-terracotta">&#9829;</span> for adventures together
+          </p>
+          <div className="flex gap-6 text-sm text-ink-light">
+            <Link to="/privacy" className="hover:text-terracotta transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-terracotta transition-colors">Terms of Service</Link>
+          </div>
+        </div>
       </footer>
     </div>
   )
