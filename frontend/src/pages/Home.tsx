@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
-import { Users, Calendar, Plane, User, LogOut, Map, Wallet, Wifi, Sparkles, Menu, X } from 'lucide-react'
+import { Users, Calendar, Plane, User, LogOut, Map, Wallet, Sparkles, Menu, X } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { User as UserType } from '@/types'
 
@@ -246,11 +246,11 @@ export function Home() {
 
           <Card className="hover:-translate-y-2 hover:shadow-xl p-4 md:p-6">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-sand to-sand-dark rounded-xl flex items-center justify-center mb-3 md:mb-4">
-              <Wifi className="h-4 w-4 md:h-5 md:w-5 text-forest" />
+              <Map className="h-4 w-4 md:h-5 md:w-5 text-forest" />
             </div>
-            <CardTitle className="text-base md:text-lg mb-2">Works Offline</CardTitle>
+            <CardTitle className="text-base md:text-lg mb-2">Create Guides</CardTitle>
             <CardDescription className="text-sm leading-relaxed text-ink-light">
-              Access your itinerary anywhere, even without wifi.
+              Share your favorite spots and recommendations with fellow travelers.
             </CardDescription>
           </Card>
 
