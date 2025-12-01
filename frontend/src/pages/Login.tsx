@@ -78,10 +78,12 @@ export function Login() {
         })
         const buttonDiv = document.getElementById('google-signin-button')
         if (buttonDiv) {
+          // Use container width for responsive sizing, max 400px
+          const buttonWidth = Math.min(buttonDiv.offsetWidth || 400, 400)
           window.google.accounts.id.renderButton(buttonDiv, {
             theme: 'outline',
             size: 'large',
-            width: 400,
+            width: buttonWidth,
             text: 'signin_with',
             shape: 'rectangular',
           })
@@ -180,7 +182,7 @@ export function Login() {
                     <span className="bg-white px-2 text-ink-light">Or continue with</span>
                   </div>
                 </div>
-                <div id="google-signin-button" className="flex justify-center w-full" />
+                <div id="google-signin-button" className="flex justify-center w-full overflow-hidden" />
               </>
             )}
 

@@ -78,10 +78,12 @@ export function Register() {
         })
         const buttonDiv = document.getElementById('google-signup-button')
         if (buttonDiv) {
+          // Use container width for responsive sizing, max 400px
+          const buttonWidth = Math.min(buttonDiv.offsetWidth || 400, 400)
           window.google.accounts.id.renderButton(buttonDiv, {
             theme: 'outline',
             size: 'large',
-            width: 400,
+            width: buttonWidth,
             text: 'signup_with',
             shape: 'rectangular',
           })
@@ -205,7 +207,7 @@ export function Register() {
                     <span className="bg-white px-2 text-ink-light">Or continue with</span>
                   </div>
                 </div>
-                <div id="google-signup-button" className="flex justify-center w-full" />
+                <div id="google-signup-button" className="flex justify-center w-full overflow-hidden" />
               </>
             )}
 
