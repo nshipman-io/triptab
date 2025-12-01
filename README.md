@@ -161,6 +161,132 @@ triptab/
 - `GET /trips/{id}/recommendations` - Get personalized recommendations
 - `POST /trips/{id}/recommendations/add` - Add to itinerary
 
+## Production Deployment
+
+### Architecture
+
+```
+                    ┌─────────────────┐
+                    │   Cloudflare    │
+                    │  (DNS + SSL)    │
+                    └────────┬────────┘
+                             │
+                             ▼
+┌────────────────────────────────────────────────────────┐
+│              DigitalOcean Droplet                      │
+│                  165.227.191.10                        │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │                   nginx                          │  │
+│  │              (reverse proxy)                     │  │
+│  │  triptab.io → frontend    api.triptab.io → api  │  │
+│  └──────────────┬─────────────────────┬─────────────┘  │
+│                 │                     │                │
+│    ┌────────────▼────────┐  ┌────────▼─────────┐      │
+│    │     Frontend        │  │     Backend      │      │
+│    │   (React + nginx)   │  │    (FastAPI)     │      │
+│    └─────────────────────┘  └────────┬─────────┘      │
+│                                      │                │
+└──────────────────────────────────────┼────────────────┘
+                                       │
+                          ┌────────────▼───────────┐
+                          │  DigitalOcean Managed  │
+                          │      PostgreSQL        │
+                          └────────────────────────┘
+```
+
+### Prerequisites
+
+1. **Local Machine**
+   - Docker Desktop
+   - [doctl](https://docs.digitalocean.com/reference/doctl/) - DigitalOcean CLI
+   - Ansible (`pip install ansible`)
+   - SSH access to the server
+
+2. **DigitalOcean**
+   - Container Registry (nshipman)
+   - Managed PostgreSQL database
+   - Droplet (Ubuntu 22.04+)
+
+3. **Cloudflare**
+   - DNS configured for `triptab.io`:
+     - `A` record → `165.227.191.10`
+     - `CNAME` `www` → `triptab.io`
+     - `A` record for `api.triptab.io` → `165.227.191.10`
+   - SSL mode: Full (strict)
+
+### Initial Server Setup (One-time)
+
+```bash
+# 1. Run Ansible setup playbook
+make setup-server
+
+# 2. SSH into server and authenticate with DO registry
+ssh root@165.227.191.10
+doctl auth init          # Enter your DO API token
+doctl registry login
+exit
+
+# 3. Deploy the application
+make deploy
+```
+
+### Deployment Workflow
+
+```bash
+# Full deployment: build images, push to registry, deploy to server
+make deploy
+
+# Or run steps individually:
+make build          # Build Docker images (linux/amd64)
+make push           # Push images to DO registry
+make ansible-deploy # Deploy to server via Ansible
+```
+
+### Makefile Commands
+
+| Command | Description |
+|---------|-------------|
+| `make help` | Show all available commands |
+| `make build` | Build all Docker images |
+| `make push` | Push images to DO registry |
+| `make deploy` | Build, push, and deploy to production |
+| `make ssh` | SSH into production server |
+| `make ssh-logs` | SSH and tail production logs |
+| `make prod-logs` | View logs via Ansible |
+| `make prod-seed` | Run database seed script on production |
+| `make prod-migrate` | Run database migrations on production |
+| `make prod-shell` | Open Python shell on production backend |
+
+### Production Environment
+
+Create `deploy/.env.prod` with:
+
+```bash
+DATABASE_URL=postgresql+asyncpg://user:pass@host:port/db?ssl=require
+SECRET_KEY=your_secret_key
+OPENAI_API_KEY=your_openai_api_key
+```
+
+**Note**: Use `ssl=require` (not `sslmode=require`) for asyncpg connections.
+
+### Troubleshooting
+
+**exec format error**
+- Images were built for wrong architecture. Ensure `--platform linux/amd64` is set in build commands.
+
+**502 Bad Gateway**
+- Check container status: `ssh root@165.227.191.10 "cd /opt/triptab && docker compose ps"`
+- Check logs: `make ssh-logs`
+
+**Database connection issues**
+- Verify `DATABASE_URL` uses `ssl=require` not `sslmode=require`
+- Ensure `+asyncpg` is present in the URL (use `env_file` instead of environment variable interpolation)
+
+**Cloudflare connection issues**
+- Ensure SSL mode is set to "Full (strict)"
+- Verify DNS A records point to correct IP
+- Check nginx is listening on port 80
+
 ## TODO / Known Issues
 
 - [ ] **AI Recommendation Booking Links** - Hotel recommendations from AI currently generate invalid booking URLs. Need to improve the linking logic to generate proper affiliate/search URLs based on the recommended hotel name and location.

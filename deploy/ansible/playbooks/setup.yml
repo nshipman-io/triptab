@@ -1,0 +1,132 @@
+---
+# Initial server setup - run once
+# Usage: ansible-playbook playbooks/setup.yml
+
+- name: Setup Triptab Server
+  hosts: triptab
+  become: yes
+
+  vars:
+    app_dir: /opt/triptab
+    docker_compose_version: "2.24.0"
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - python3-pip
+        state: present
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        state: present
+
+    - name: Install Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    - name: Start and enable Docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install doctl
+      get_url:
+        url: https://github.com/digitalocean/doctl/releases/download/v1.101.0/doctl-1.101.0-linux-amd64.tar.gz
+        dest: /tmp/doctl.tar.gz
+
+    - name: Extract doctl
+      unarchive:
+        src: /tmp/doctl.tar.gz
+        dest: /usr/local/bin
+        remote_src: yes
+
+    - name: Create app directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copy docker-compose.prod.yml
+      copy:
+        src: ../../../docker-compose.prod.yml
+        dest: "{{ app_dir }}/docker-compose.yml"
+        mode: '0644'
+
+    - name: Copy nginx config
+      copy:
+        src: ../../../nginx.prod.conf
+        dest: "{{ app_dir }}/nginx.prod.conf"
+        mode: '0644'
+
+    - name: Copy Makefile
+      copy:
+        src: ../../../Makefile
+        dest: "{{ app_dir }}/Makefile"
+        mode: '0644'
+
+    - name: Copy .env.prod file
+      copy:
+        src: ../../.env.prod
+        dest: "{{ app_dir }}/.env"
+        mode: '0600'
+
+    - name: Setup firewall - allow SSH
+      ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+
+    - name: Setup firewall - allow HTTP
+      ufw:
+        rule: allow
+        port: '80'
+        proto: tcp
+
+    - name: Setup firewall - allow HTTPS
+      ufw:
+        rule: allow
+        port: '443'
+        proto: tcp
+
+    - name: Enable firewall
+      ufw:
+        state: enabled
+        policy: deny
+
+    - name: Print next steps
+      debug:
+        msg: |
+          Server setup complete!
+
+          Next step - SSH in and authenticate with DO registry:
+
+          ssh root@165.227.191.10
+          doctl auth init   # Enter your DO API token
+          doctl registry login
+
+          Then run: make ansible-deploy

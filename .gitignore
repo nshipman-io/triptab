@@ -15,7 +15,10 @@ build/
 .env
 .env.local
 .env.*.local
+.env.prod
+deploy/.env.prod
 !.env.example
+!.env.prod.example
 
 # IDE
 .idea/
