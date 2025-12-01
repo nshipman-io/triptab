@@ -75,7 +75,6 @@ export function ItineraryItemForm({ type, item, tripStartDate, onSubmit, onCance
   const [startTime, setStartTime] = useState(getDefaultTime())
   const [endTime, setEndTime] = useState(getDefaultEndTime())
   const [notes, setNotes] = useState(item?.notes || '')
-  const [bookingUrl, setBookingUrl] = useState(item?.booking_url || '')
   const [price, setPrice] = useState(item?.price?.toString() || '')
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -91,7 +90,6 @@ export function ItineraryItemForm({ type, item, tripStartDate, onSubmit, onCance
       start_time: startDateTime,
       end_time: endDateTime,
       notes: notes || undefined,
-      booking_url: bookingUrl || undefined,
       price: price ? parseFloat(price) : undefined,
     })
   }
@@ -185,18 +183,6 @@ export function ItineraryItemForm({ type, item, tripStartDate, onSubmit, onCance
                 className="pl-7"
               />
             </div>
-          </div>
-
-          {/* Booking URL */}
-          <div className="space-y-2">
-            <Label htmlFor="bookingUrl">Booking URL</Label>
-            <Input
-              id="bookingUrl"
-              type="url"
-              placeholder="https://..."
-              value={bookingUrl}
-              onChange={(e) => setBookingUrl(e.target.value)}
-            />
           </div>
 
           {/* Notes */}
