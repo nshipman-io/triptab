@@ -398,6 +398,45 @@ class ApiClient {
       body: JSON.stringify({ item_ids: placeIds }),
     })
   }
+
+  // Admin endpoints
+  async getAdminStats() {
+    return this.request('/admin/stats')
+  }
+
+  async getAdminTrends(days: number = 30) {
+    return this.request(`/admin/stats/trends?days=${days}`)
+  }
+
+  async getAdminUsers(params: {
+    page?: number
+    per_page?: number
+    sort_by?: string
+    sort_order?: string
+    search?: string
+  } = {}) {
+    const searchParams = new URLSearchParams()
+    if (params.page) searchParams.append('page', params.page.toString())
+    if (params.per_page) searchParams.append('per_page', params.per_page.toString())
+    if (params.sort_by) searchParams.append('sort_by', params.sort_by)
+    if (params.sort_order) searchParams.append('sort_order', params.sort_order)
+    if (params.search) searchParams.append('search', params.search)
+    return this.request(`/admin/users?${searchParams.toString()}`)
+  }
+
+  async getAdminGuides(params: {
+    visibility?: string
+    sort_by?: string
+    sort_order?: string
+    limit?: number
+  } = {}) {
+    const searchParams = new URLSearchParams()
+    if (params.visibility) searchParams.append('visibility', params.visibility)
+    if (params.sort_by) searchParams.append('sort_by', params.sort_by)
+    if (params.sort_order) searchParams.append('sort_order', params.sort_order)
+    if (params.limit) searchParams.append('limit', params.limit.toString())
+    return this.request(`/admin/guides?${searchParams.toString()}`)
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL)

@@ -11,6 +11,9 @@ import { CreateGuide } from '@/pages/CreateGuide'
 import { GuideView } from '@/pages/GuideView'
 import { Privacy } from '@/pages/Privacy'
 import { Terms } from '@/pages/Terms'
+import { AdminDashboard } from '@/pages/admin/AdminDashboard'
+import { AdminUsers } from '@/pages/admin/AdminUsers'
+import { AdminGuides } from '@/pages/admin/AdminGuides'
 
 function App() {
   return (
@@ -28,6 +31,9 @@ function App() {
         <Route path="/guides/:id" element={<GuideView />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/admin/guides" element={<AdminGuides />} />
       </Routes>
     </BrowserRouter>
   )
