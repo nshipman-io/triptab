@@ -11,6 +11,9 @@ GIT_SHA := $(shell git rev-parse --short HEAD)
 FRONTEND_IMAGE_SHA := $(REGISTRY)/$(REPO):frontend-$(GIT_SHA)
 API_IMAGE_SHA := $(REGISTRY)/$(REPO):api-$(GIT_SHA)
 
+# Google OAuth Client ID (for frontend build)
+GOOGLE_CLIENT_ID := 362318535094-1ragsvmu9qtckp7k8d2piacp15iu48ll.apps.googleusercontent.com
+
 .PHONY: help build build-frontend build-api push push-frontend push-api login all clean
 
 help: ## Show this help
@@ -26,6 +29,7 @@ build-frontend: ## Build frontend image
 		--platform linux/amd64 \
 		-f frontend/Dockerfile \
 		--target production \
+		--build-arg VITE_GOOGLE_CLIENT_ID=$(GOOGLE_CLIENT_ID) \
 		-t $(FRONTEND_IMAGE) \
 		-t $(FRONTEND_IMAGE_SHA) \
 		./frontend

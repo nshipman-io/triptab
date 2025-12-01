@@ -1,10 +1,38 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { api } from '@/lib/api'
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string
+            callback: (response: { credential: string }) => void
+            auto_select?: boolean
+          }) => void
+          renderButton: (
+            element: HTMLElement,
+            config: {
+              theme?: 'outline' | 'filled_blue' | 'filled_black'
+              size?: 'large' | 'medium' | 'small'
+              width?: number
+              text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin'
+              shape?: 'rectangular' | 'pill' | 'circle' | 'square'
+            }
+          ) => void
+        }
+      }
+    }
+  }
+}
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
 export function Register() {
   const navigate = useNavigate()
@@ -19,6 +47,53 @@ export function Register() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
+    setError('')
+    setLoading(true)
+    try {
+      const authResponse = await api.googleAuth(response.credential)
+      api.setToken(authResponse.access_token)
+      navigate(from)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Google sign-up failed')
+    } finally {
+      setLoading(false)
+    }
+  }, [from, navigate])
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return
+
+    // Load Google Sign-In script
+    const script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    script.onload = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCallback,
+        })
+        const buttonDiv = document.getElementById('google-signup-button')
+        if (buttonDiv) {
+          window.google.accounts.id.renderButton(buttonDiv, {
+            theme: 'outline',
+            size: 'large',
+            width: 400,
+            text: 'signup_with',
+            shape: 'rectangular',
+          })
+        }
+      }
+    }
+    document.head.appendChild(script)
+
+    return () => {
+      document.head.removeChild(script)
+    }
+  }, [handleGoogleCallback])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -119,6 +194,21 @@ export function Register() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Creating account...' : 'Create account'}
             </Button>
+
+            {GOOGLE_CLIENT_ID && (
+              <>
+                <div className="relative w-full">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-sand-dark" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-ink-light">Or continue with</span>
+                  </div>
+                </div>
+                <div id="google-signup-button" className="flex justify-center w-full" />
+              </>
+            )}
+
             <p className="text-center text-sm text-ink-light">
               Already have an account?{' '}
               <Link to={redirectParam ? `/login?redirect=${redirectParam}` : "/login"} className="text-terracotta hover:underline font-medium">
