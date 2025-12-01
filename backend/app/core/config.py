@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str = ""
 
     # Admin user (created on startup if password is set)
-    ADMIN_EMAIL: str = "triptab-admin@triptab.io"
+    ADMIN_EMAIL: str = "support@triptab.io"
     ADMIN_PASSWORD: str = ""  # Set via ADMIN_PASSWORD env var
 
     # CORS
