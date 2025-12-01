@@ -109,8 +109,28 @@ ssh-logs: ## SSH and tail logs
 prod-seed: ## Run seed script on production
 	ssh root@165.227.191.10 "cd /opt/triptab && docker compose exec backend python -m app.seed_guides"
 
-prod-migrate: ## Run migrations on production
+prod-migrate: ## Run Alembic migrations on production
 	ssh root@165.227.191.10 "cd /opt/triptab && docker compose exec backend alembic upgrade head"
+
+prod-migrate-sql: ## Run raw SQL migration on production (usage: make prod-migrate-sql SQL="ALTER TABLE...")
+	ssh root@165.227.191.10 "cd /opt/triptab && docker compose exec backend python -c \"from sqlalchemy import text; from app.core.database import engine; import asyncio; asyncio.run((lambda: engine.begin().__aenter__().then(lambda conn: conn.execute(text('$(SQL)'))))()) if '$(SQL)' else print('Usage: make prod-migrate-sql SQL=\"your sql here\"')\""
+
+prod-db-shell: ## Open psql shell on production database
+	ssh -t root@165.227.191.10 "cd /opt/triptab && docker compose exec backend python -c \"from app.core.config import settings; print(settings.DATABASE_URL.replace('+asyncpg', ''))\" | xargs -I {} psql {}"
 
 prod-shell: ## Open Python shell on production backend
 	ssh -t root@165.227.191.10 "cd /opt/triptab && docker compose exec backend python"
+
+prod-add-oauth-columns: ## Add OAuth columns to users table (one-time migration)
+	ssh root@165.227.191.10 "cd /opt/triptab && docker compose exec backend python -c \"\
+from sqlalchemy import text; \
+from app.core.database import engine; \
+import asyncio; \
+async def migrate(): \
+    async with engine.begin() as conn: \
+        await conn.execute(text('ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider VARCHAR(50)')); \
+        await conn.execute(text('ALTER TABLE users ADD COLUMN IF NOT EXISTS provider_id VARCHAR(255)')); \
+        await conn.execute(text('ALTER TABLE users ALTER COLUMN hashed_password DROP NOT NULL')); \
+        print('OAuth columns added!'); \
+asyncio.run(migrate()) \
+\""
