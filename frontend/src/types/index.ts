@@ -228,6 +228,7 @@ export interface Recommendation {
   location?: Location
   rating?: number
   tags: string[]
+  website_url?: string
 }
 
 // Auth types

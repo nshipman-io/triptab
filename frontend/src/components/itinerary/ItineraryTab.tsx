@@ -1,14 +1,41 @@
 import { useState, useMemo } from 'react'
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import {
   Plane, Hotel, MapPin, Utensils, Car, Calendar, Plus,
   Check, GripVertical, Mail, Pencil, Trash2,
-  ChevronRight, MoreHorizontal
+  ChevronRight, CalendarDays
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu'
 import type { Trip, ItineraryItem, ItineraryItemType } from '@/types'
 import { cn } from '@/lib/utils'
+import { api } from '@/lib/api'
+import { toast } from 'sonner'
 
 const ITEM_ICONS: Record<ItineraryItemType, React.ReactNode> = {
   flight: <Plane className="h-4 w-4" />,
@@ -45,6 +72,156 @@ interface ItineraryTabProps {
   onImport: () => void
   showItemForm: boolean
   itemFormContent: React.ReactNode
+  onItemsReordered?: (items: ItineraryItem[]) => void
+}
+
+// Sortable Item Component
+function SortableItem({
+  item,
+  canEdit,
+  onEditItem,
+  onDeleteItem,
+  onMoveToDate,
+  tripDays,
+  currentDateString,
+}: {
+  item: ItineraryItem
+  canEdit: boolean
+  onEditItem: (item: ItineraryItem) => void
+  onDeleteItem: (itemId: string) => void
+  onMoveToDate: (itemId: string, newDate: string) => void
+  tripDays: DayData[]
+  currentDateString: string
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  }
+
+  return (
+    <Card
+      ref={setNodeRef}
+      style={style}
+      className={cn("group p-3 md:p-4", isDragging && "shadow-lg ring-2 ring-forest")}
+    >
+      <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 p-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {canEdit && (
+            <div
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing touch-none"
+            >
+              <GripVertical className="h-5 w-5 text-ink-light shrink-0 hidden sm:block hover:text-ink" />
+            </div>
+          )}
+          <div className={cn("rounded-full p-2 shrink-0", ITEM_COLORS[item.type])}>
+            {ITEM_ICONS[item.type]}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-medium truncate">{item.title}</h4>
+            {item.location && (
+              <p className="text-sm text-ink-light truncate">{item.location}</p>
+            )}
+          </div>
+          <div className="text-right sm:hidden">
+            <p className="text-sm">
+              {new Date(item.start_time).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-1">
+          <div className="text-right hidden sm:block">
+            <p className="text-sm">
+              {new Date(item.start_time).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+            {item.price && (
+              <p className="text-sm text-ink-light">
+                {item.currency || '$'}{item.price}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            {item.booking_confirmed && (
+              <span className="flex items-center gap-1 text-xs sm:text-sm text-green-600 mr-1 sm:mr-2">
+                <Check className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Booked</span>
+              </span>
+            )}
+            {canEdit && (
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                    >
+                      <CalendarDays className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>Move to day</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {tripDays.map((day) => (
+                      <DropdownMenuItem
+                        key={day.dateString}
+                        disabled={day.dateString === currentDateString}
+                        onClick={() => onMoveToDate(item.id, day.dateString)}
+                        className={cn(
+                          day.dateString === currentDateString && "opacity-50"
+                        )}
+                      >
+                        <span className="truncate">
+                          {day.date.getMonth() + 1}/{day.date.getDate()}/{day.date.getFullYear()}
+                        </span>
+                        {day.dateString === currentDateString && (
+                          <Check className="h-4 w-4 ml-auto" />
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEditItem(item)}
+                  className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDeleteItem(item.id)}
+                  className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-ink-light hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
 
 export function ItineraryTab({
@@ -57,8 +234,26 @@ export function ItineraryTab({
   onImport,
   showItemForm,
   itemFormContent,
+  onItemsReordered,
 }: ItineraryTabProps) {
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set())
+  const [localItems, setLocalItems] = useState<ItineraryItem[]>(items)
+
+  // Update local items when props change
+  useMemo(() => {
+    setLocalItems(items)
+  }, [items])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   // Generate all days between trip start and end dates
   const tripDays = useMemo((): DayData[] => {
@@ -71,7 +266,7 @@ export function ItineraryTab({
 
     while (current <= end) {
       const dateString = current.toISOString().split('T')[0]
-      const dayItems = items.filter(item => {
+      const dayItems = localItems.filter(item => {
         const itemDate = new Date(item.start_time).toISOString().split('T')[0]
         return itemDate === dateString
       })
@@ -94,7 +289,7 @@ export function ItineraryTab({
     }
 
     return days
-  }, [trip.start_date, trip.end_date, items])
+  }, [trip.start_date, trip.end_date, localItems])
 
   // Initialize expanded days (expand days with items by default)
   useState(() => {
@@ -114,6 +309,75 @@ export function ItineraryTab({
       }
       return next
     })
+  }
+
+  const handleDragEnd = async (event: DragEndEvent, dayItems: ItineraryItem[]) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      const oldIndex = dayItems.findIndex(item => item.id === active.id)
+      const newIndex = dayItems.findIndex(item => item.id === over.id)
+
+      const newDayItems = arrayMove(dayItems, oldIndex, newIndex)
+      const itemIds = newDayItems.map(item => item.id)
+
+      // Update local state optimistically
+      const newLocalItems = localItems.map(item => {
+        const newOrder = itemIds.indexOf(item.id)
+        if (newOrder !== -1) {
+          return { ...item, order: newOrder }
+        }
+        return item
+      })
+      setLocalItems(newLocalItems)
+
+      // Persist to server
+      try {
+        await api.reorderItineraryItems(trip.id, itemIds)
+        if (onItemsReordered) {
+          onItemsReordered(newLocalItems)
+        }
+        toast.success('Itinerary reordered')
+      } catch (error) {
+        console.error('Failed to reorder items:', error)
+        toast.error('Failed to reorder items')
+        // Revert on error
+        setLocalItems(items)
+      }
+    }
+  }
+
+  const handleMoveToDate = async (itemId: string, newDate: string) => {
+    const item = localItems.find(i => i.id === itemId)
+    if (!item) return
+
+    // Optimistically update local state
+    const updatedItems = localItems.map(i => {
+      if (i.id === itemId) {
+        const oldDate = new Date(i.start_time)
+        const newDateObj = new Date(newDate + 'T' + oldDate.toTimeString().split(' ')[0])
+        return { ...i, start_time: newDateObj.toISOString(), order: 0 }
+      }
+      return i
+    })
+    setLocalItems(updatedItems)
+
+    // Expand the target day
+    setExpandedDays(prev => new Set([...prev, newDate]))
+
+    try {
+      await api.moveItineraryItem(trip.id, itemId, newDate, 0)
+      if (onItemsReordered) {
+        onItemsReordered(updatedItems)
+      }
+      const d = new Date(newDate + 'T00:00:00')
+      toast.success('Moved to ' + `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`)
+    } catch (error) {
+      console.error('Failed to move item:', error)
+      toast.error('Failed to move item')
+      // Revert on error
+      setLocalItems(items)
+    }
   }
 
   return (
@@ -141,7 +405,7 @@ export function ItineraryTab({
               >
                 <div className="flex items-center justify-between">
                   <span>
-                    {day.dayName.slice(0, 3)} {day.date.getMonth() + 1}/{day.date.getDate()}
+                    {day.date.getMonth() + 1}/{day.date.getDate()}/{day.date.getFullYear()}
                   </span>
                   {day.items.length > 0 && (
                     <span className="text-xs bg-forest text-cream px-1.5 py-0.5 rounded-full">
@@ -230,17 +494,11 @@ export function ItineraryTab({
                           {day.formattedDate}
                         </h3>
                       </div>
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          // Day options menu - could add more options here
-                        }}
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </span>
+                      {day.items.length > 0 && (
+                        <span className="text-xs bg-sand-dark text-ink-light px-2 py-1 rounded-full">
+                          {day.items.length} {day.items.length === 1 ? 'activity' : 'activities'}
+                        </span>
+                      )}
                     </button>
                   </CollapsibleTrigger>
 
@@ -260,75 +518,31 @@ export function ItineraryTab({
                         )}
                       </div>
                     ) : (
-                      day.items.map((item) => (
-                        <Card key={item.id} className="group p-3 md:p-4">
-                          <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 p-0">
-                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                              <GripVertical className="h-5 w-5 text-ink-light cursor-move shrink-0 hidden sm:block" />
-                              <div className={cn("rounded-full p-2 shrink-0", ITEM_COLORS[item.type])}>
-                                {ITEM_ICONS[item.type]}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-medium truncate">{item.title}</h4>
-                                {item.location && (
-                                  <p className="text-sm text-ink-light truncate">{item.location}</p>
-                                )}
-                              </div>
-                              <div className="text-right sm:hidden">
-                                <p className="text-sm">
-                                  {new Date(item.start_time).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-1">
-                              <div className="text-right hidden sm:block">
-                                <p className="text-sm">
-                                  {new Date(item.start_time).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
-                                </p>
-                                {item.price && (
-                                  <p className="text-sm text-ink-light">
-                                    {item.currency || '$'}{item.price}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                {item.booking_confirmed && (
-                                  <span className="flex items-center gap-1 text-xs sm:text-sm text-green-600 mr-1 sm:mr-2">
-                                    <Check className="h-3 w-3 sm:h-4 sm:w-4" />
-                                    <span className="hidden sm:inline">Booked</span>
-                                  </span>
-                                )}
-                                {canEdit && (
-                                  <>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => onEditItem(item)}
-                                      className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                                    >
-                                      <Pencil className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => onDeleteItem(item.id)}
-                                      className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-ink-light hover:text-destructive"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={(event) => handleDragEnd(event, day.items)}
+                      >
+                        <SortableContext
+                          items={day.items.map(item => item.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className="space-y-2">
+                            {day.items.map((item) => (
+                              <SortableItem
+                                key={item.id}
+                                item={item}
+                                canEdit={canEdit}
+                                onEditItem={onEditItem}
+                                onDeleteItem={onDeleteItem}
+                                onMoveToDate={handleMoveToDate}
+                                tripDays={tripDays}
+                                currentDateString={day.dateString}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
                     )}
                   </CollapsibleContent>
                 </div>

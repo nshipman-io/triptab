@@ -18,6 +18,7 @@ class RecommendationResponse(BaseModel):
     location: Location | None = None
     rating: float | None = None
     tags: list[str] = []
+    website_url: str | None = None
 
 
 class RecommendationsRequest(BaseModel):
