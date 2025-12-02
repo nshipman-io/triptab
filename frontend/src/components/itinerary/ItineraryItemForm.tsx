@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Plane, Hotel, MapPin, Utensils, Car, X } from 'lucide-react'
+import { Plane, Hotel, MapPin, Utensils, Car, X, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { ItineraryItem, ItineraryItemType } from '@/types'
+import { cn } from '@/lib/utils'
 
 const TYPE_CONFIG: Record<ItineraryItemType, { icon: React.ReactNode; label: string; placeholder: string }> = {
   flight: {
@@ -76,6 +77,7 @@ export function ItineraryItemForm({ type, item, tripStartDate, onSubmit, onCance
   const [endTime, setEndTime] = useState(getDefaultEndTime())
   const [notes, setNotes] = useState(item?.notes || '')
   const [price, setPrice] = useState(item?.price?.toString() || '')
+  const [booked, setBooked] = useState(item?.booking_confirmed || false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -91,6 +93,7 @@ export function ItineraryItemForm({ type, item, tripStartDate, onSubmit, onCance
       end_time: endDateTime,
       notes: notes || undefined,
       price: price ? parseFloat(price) : undefined,
+      booking_confirmed: booked,
     })
   }
 
@@ -195,6 +198,20 @@ export function ItineraryItemForm({ type, item, tripStartDate, onSubmit, onCance
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
+
+          {/* Booked Checkbox */}
+          <label className="flex items-center gap-3 cursor-pointer rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+            <input
+              type="checkbox"
+              checked={booked}
+              onChange={(e) => setBooked(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <div className="flex items-center gap-2">
+              <Check className={cn("h-4 w-4", booked ? "text-green-600" : "text-muted-foreground")} />
+              <span className="text-sm font-medium">Booked / Confirmed</span>
+            </div>
+          </label>
 
           {/* Actions */}
           <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
