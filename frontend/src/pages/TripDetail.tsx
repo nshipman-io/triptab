@@ -522,6 +522,7 @@ export function TripDetail() {
                   members={members}
                   currentUserId={currentUser?.id}
                   canEdit={canEdit}
+                  itineraryItems={items}
                 />
               </TabsContent>
 

@@ -75,6 +75,38 @@ interface ItineraryTabProps {
   onItemsReordered?: (items: ItineraryItem[]) => void
 }
 
+// Helper to check if an item is multi-day
+function isMultiDayItem(item: ItineraryItem): boolean {
+  if (!item.end_time) return false
+  const startDate = item.start_time.split('T')[0]
+  const endDate = item.end_time.split('T')[0]
+  return endDate > startDate
+}
+
+// Helper to get day label for multi-day items
+function getMultiDayLabel(item: ItineraryItem, currentDateString: string): string | null {
+  if (!isMultiDayItem(item)) return null
+
+  const startDate = item.start_time.split('T')[0]
+  const endDate = item.end_time!.split('T')[0]
+
+  // Calculate day number within the span
+  const start = new Date(startDate + 'T00:00:00')
+  const current = new Date(currentDateString + 'T00:00:00')
+  const end = new Date(endDate + 'T00:00:00')
+
+  const dayNum = Math.floor((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+  const totalDays = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+
+  if (currentDateString === startDate) {
+    return `Day 1 of ${totalDays}`
+  } else if (currentDateString === endDate) {
+    return `Day ${totalDays} of ${totalDays} (checkout)`
+  } else {
+    return `Day ${dayNum} of ${totalDays}`
+  }
+}
+
 // Sortable Item Component
 function SortableItem({
   item,
@@ -93,6 +125,8 @@ function SortableItem({
   tripDays: DayData[]
   currentDateString: string
 }) {
+  const multiDayLabel = getMultiDayLabel(item, currentDateString)
+  const isSpanningDay = multiDayLabel !== null && item.start_time.split('T')[0] !== currentDateString
   const {
     attributes,
     listeners,
@@ -113,11 +147,15 @@ function SortableItem({
     <Card
       ref={setNodeRef}
       style={style}
-      className={cn("group p-3 md:p-4", isDragging && "shadow-lg ring-2 ring-forest")}
+      className={cn(
+        "group p-3 md:p-4",
+        isDragging && "shadow-lg ring-2 ring-forest",
+        isSpanningDay && "opacity-75 border-dashed"
+      )}
     >
       <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 p-0">
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          {canEdit && (
+          {canEdit && !isSpanningDay && (
             <div
               {...attributes}
               {...listeners}
@@ -130,7 +168,14 @@ function SortableItem({
             {ITEM_ICONS[item.type]}
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="font-medium truncate">{item.title}</h4>
+            <div className="flex items-center gap-2">
+              <h4 className="font-medium truncate">{item.title}</h4>
+              {multiDayLabel && (
+                <span className="text-xs bg-sand-dark text-ink-light px-1.5 py-0.5 rounded shrink-0">
+                  {multiDayLabel}
+                </span>
+              )}
+            </div>
             {item.location && (
               <p className="text-sm text-ink-light truncate">{item.location}</p>
             )}
@@ -146,13 +191,15 @@ function SortableItem({
         </div>
         <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-1">
           <div className="text-right hidden sm:block">
-            <p className="text-sm">
-              {new Date(item.start_time).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
-            {item.price && (
+            {!isSpanningDay && (
+              <p className="text-sm">
+                {new Date(item.start_time).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            )}
+            {item.price && !isSpanningDay && (
               <p className="text-sm text-ink-light">
                 {item.currency || '$'}{item.price}
               </p>
@@ -276,8 +323,22 @@ export function ItineraryTab({
 
       const dayItems = localItems.filter(item => {
         // Parse item date in local timezone for comparison
-        const itemDateStr = item.start_time.split('T')[0]
-        return itemDateStr === dateString
+        const itemStartDateStr = item.start_time.split('T')[0]
+        const itemEndDateStr = item.end_time ? item.end_time.split('T')[0] : itemStartDateStr
+
+        // Item appears on this day if:
+        // 1. It starts on this day, OR
+        // 2. It's a multi-day item that spans this day (start <= day <= end)
+        if (itemStartDateStr === dateString) {
+          return true
+        }
+
+        // Check if this is a multi-day item spanning this date
+        if (itemEndDateStr > itemStartDateStr) {
+          return dateString >= itemStartDateStr && dateString <= itemEndDateStr
+        }
+
+        return false
       })
 
       days.push({

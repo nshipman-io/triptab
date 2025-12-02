@@ -7,31 +7,36 @@ import { Label } from '@/components/ui/label'
 import type { ItineraryItem, ItineraryItemType } from '@/types'
 import { cn } from '@/lib/utils'
 
-const TYPE_CONFIG: Record<ItineraryItemType, { icon: React.ReactNode; label: string; placeholder: string }> = {
+const TYPE_CONFIG: Record<ItineraryItemType, { icon: React.ReactNode; label: string; placeholder: string; supportsMultiDay: boolean }> = {
   flight: {
     icon: <Plane className="h-5 w-5" />,
     label: 'Flight',
-    placeholder: 'e.g., Delta Flight to NYC'
+    placeholder: 'e.g., Delta Flight to NYC',
+    supportsMultiDay: false,
   },
   hotel: {
     icon: <Hotel className="h-5 w-5" />,
     label: 'Hotel',
-    placeholder: 'e.g., Marriott Downtown'
+    placeholder: 'e.g., Marriott Downtown',
+    supportsMultiDay: true,
   },
   experience: {
     icon: <MapPin className="h-5 w-5" />,
     label: 'Experience',
-    placeholder: 'e.g., City Walking Tour'
+    placeholder: 'e.g., City Walking Tour',
+    supportsMultiDay: true,
   },
   restaurant: {
     icon: <Utensils className="h-5 w-5" />,
     label: 'Restaurant',
-    placeholder: 'e.g., Dinner at Nobu'
+    placeholder: 'e.g., Dinner at Nobu',
+    supportsMultiDay: false,
   },
   transport: {
     icon: <Car className="h-5 w-5" />,
     label: 'Transport',
-    placeholder: 'e.g., Car Rental - Hertz'
+    placeholder: 'e.g., Car Rental - Hertz',
+    supportsMultiDay: true,
   },
 }
 
@@ -62,6 +67,13 @@ export function ItineraryItemForm({ type, item, tripStartDate, onSubmit, onCance
     return '09:00'
   }
 
+  const getDefaultEndDate = () => {
+    if (item?.end_time) {
+      return item.end_time.split('T')[0]
+    }
+    return ''
+  }
+
   const getDefaultEndTime = () => {
     if (item?.end_time) {
       const timePart = item.end_time.split('T')[1]
@@ -73,17 +85,31 @@ export function ItineraryItemForm({ type, item, tripStartDate, onSubmit, onCance
   const [title, setTitle] = useState(item?.title || '')
   const [location, setLocation] = useState(item?.location || '')
   const [date, setDate] = useState(getDefaultDate())
+  const [endDate, setEndDate] = useState(getDefaultEndDate())
   const [startTime, setStartTime] = useState(getDefaultTime())
   const [endTime, setEndTime] = useState(getDefaultEndTime())
   const [notes, setNotes] = useState(item?.notes || '')
   const [price, setPrice] = useState(item?.price?.toString() || '')
   const [booked, setBooked] = useState(item?.booking_confirmed || false)
 
+  // Check if this type supports multi-day
+  const supportsMultiDay = TYPE_CONFIG[type].supportsMultiDay
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     const startDateTime = `${date}T${startTime}:00`
-    const endDateTime = endTime ? `${date}T${endTime}:00` : undefined
+
+    // For multi-day items, use endDate; otherwise use endTime on same day
+    let endDateTime: string | undefined
+    if (supportsMultiDay && endDate) {
+      // Multi-day: end date with end time (or default to 12:00 checkout time)
+      const endTimeVal = endTime || '12:00'
+      endDateTime = `${endDate}T${endTimeVal}:00`
+    } else if (endTime) {
+      // Same day: use start date with end time
+      endDateTime = `${date}T${endTime}:00`
+    }
 
     onSubmit({
       type,
@@ -138,37 +164,92 @@ export function ItineraryItemForm({ type, item, tripStartDate, onSubmit, onCance
           </div>
 
           {/* Date and Time */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="date">Date *</Label>
-              <Input
-                id="date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
+          {supportsMultiDay ? (
+            // Multi-day layout: Start Date/Time, End Date/Time
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="date">{type === 'hotel' ? 'Check-in Date *' : 'Start Date *'}</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={date}
+                    onChange={(e) => {
+                      setDate(e.target.value)
+                      // Auto-set end date if not set or before start
+                      if (!endDate || endDate < e.target.value) {
+                        setEndDate(e.target.value)
+                      }
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="startTime">{type === 'hotel' ? 'Check-in Time' : 'Start Time'}</Label>
+                  <Input
+                    id="startTime"
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="endDate">{type === 'hotel' ? 'Check-out Date' : 'End Date'}</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    min={date}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="endTime">{type === 'hotel' ? 'Check-out Time' : 'End Time'}</Label>
+                  <Input
+                    id="endTime"
+                    type="time"
+                    value={endTime}
+                    placeholder={type === 'hotel' ? '12:00' : ''}
+                    onChange={(e) => setEndTime(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:contents">
+          ) : (
+            // Single-day layout: Date, Start Time, End Time
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="startTime">Start Time</Label>
+                <Label htmlFor="date">Date *</Label>
                 <Input
-                  id="startTime"
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
+                  id="date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="endTime">End Time</Label>
-                <Input
-                  id="endTime"
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                />
+              <div className="grid grid-cols-2 gap-3 sm:contents">
+                <div className="space-y-2">
+                  <Label htmlFor="startTime">Start Time</Label>
+                  <Input
+                    id="startTime"
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="endTime">End Time</Label>
+                  <Input
+                    id="endTime"
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Price */}
           <div className="space-y-2">
