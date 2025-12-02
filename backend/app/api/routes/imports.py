@@ -107,6 +107,7 @@ async def confirm_import(
     # Apply adjustments
     title = adjustments.get("title", parsed.title)
     location = adjustments.get("location", parsed.location)
+    booking_confirmed = adjustments.get("booking_confirmed", True)  # Default to True for imports
 
     # Build start_time datetime
     start_dt = datetime.combine(
@@ -166,7 +167,7 @@ async def confirm_import(
         location=location,
         start_time=start_dt,
         end_time=end_dt,
-        booking_confirmed=True,
+        booking_confirmed=booking_confirmed,
         notes=notes,
     )
     db.add(item)

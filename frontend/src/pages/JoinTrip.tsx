@@ -146,8 +146,8 @@ export function JoinTrip() {
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     <span>
-                      {new Date(trip.start_date).toLocaleDateString()} -{' '}
-                      {new Date(trip.end_date).toLocaleDateString()}
+                      {new Date(trip.start_date.split('T')[0] + 'T00:00:00').toLocaleDateString()} -{' '}
+                      {new Date(trip.end_date.split('T')[0] + 'T00:00:00').toLocaleDateString()}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
