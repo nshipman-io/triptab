@@ -20,6 +20,7 @@ import {
   getRentalCarsUrl,
 } from '@/lib/affiliates'
 import { searchAirports, formatAirport, type Airport } from '@/lib/airports'
+import { PlacesAutocomplete } from '@/components/ui/places-autocomplete'
 import { ChecklistsTab } from '@/components/checklists/ChecklistsTab'
 import { ExpensesTab } from '@/components/expenses/ExpensesTab'
 import { ExploreTab } from '@/components/recommendations/ExploreTab'
@@ -54,6 +55,13 @@ export function TripDetail() {
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Edit trip details state (destination, dates, travelers)
+  const [isEditingDetails, setIsEditingDetails] = useState(false)
+  const [editDestination, setEditDestination] = useState('')
+  const [editStartDate, setEditStartDate] = useState('')
+  const [editEndDate, setEditEndDate] = useState('')
+  const [editTravelers, setEditTravelers] = useState('')
 
   // Itinerary item form state
   const [showItemForm, setShowItemForm] = useState(false)
@@ -240,6 +248,48 @@ export function TripDetail() {
     if (!id) return
     const updatedTrip = await api.updateTrip(id, { preferences })
     setTrip(updatedTrip as Trip)
+  }
+
+  const handleEditDetails = () => {
+    if (!trip) return
+    setEditDestination(trip.destination)
+    setEditStartDate(formatDateForInput(trip.start_date))
+    setEditEndDate(formatDateForInput(trip.end_date))
+    setEditTravelers(String(trip.preferences.num_travelers || 1))
+    setIsEditingDetails(true)
+  }
+
+  const handleSaveDetails = async () => {
+    if (!id || !editDestination || !editStartDate || !editEndDate) return
+    try {
+      const numTravelers = parseInt(editTravelers) || 1
+      const updatedTrip = await api.updateTrip(id, {
+        destination: editDestination,
+        start_date: editStartDate,
+        end_date: editEndDate,
+        preferences: {
+          ...trip?.preferences,
+          num_travelers: numTravelers,
+        },
+      })
+      setTrip(updatedTrip as Trip)
+      // Update search params to match
+      setSearchDestination(editDestination)
+      setSearchDepartDate(editStartDate)
+      setSearchReturnDate(editEndDate)
+      setSearchTravelersInput(String(numTravelers))
+      setIsEditingDetails(false)
+    } catch (error) {
+      console.error('Failed to update trip details:', error)
+    }
+  }
+
+  const handleCancelEditDetails = () => {
+    setIsEditingDetails(false)
+    setEditDestination('')
+    setEditStartDate('')
+    setEditEndDate('')
+    setEditTravelers('')
   }
 
   if (loading) {
@@ -472,6 +522,7 @@ export function TripDetail() {
                   members={members}
                   currentUserId={currentUser?.id}
                   canEdit={canEdit}
+                  itineraryItems={items}
                 />
               </TabsContent>
 
@@ -673,30 +724,108 @@ export function TripDetail() {
                   {/* Trip Details */}
                   <Card className="p-4">
                     <CardHeader className="p-0 mb-3">
-                      <CardTitle className="text-lg font-serif">Trip Details</CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg font-serif">Trip Details</CardTitle>
+                        {canEdit && !isEditingDetails && (
+                          <Button variant="ghost" size="sm" onClick={handleEditDetails} className="gap-1 text-xs">
+                            <Pencil className="h-3 w-3" />
+                            Edit
+                          </Button>
+                        )}
+                      </div>
                     </CardHeader>
                     <CardContent className="space-y-3 p-0">
-                      <div className="flex items-center gap-3">
-                        <MapPin className="h-5 w-5 text-terracotta shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm text-ink-light">Destination</p>
-                          <p className="font-medium truncate">{searchDestination.split(',')[0]}</p>
+                      {isEditingDetails ? (
+                        <div className="space-y-4">
+                          {/* Destination */}
+                          <div className="space-y-1">
+                            <Label className="text-xs text-ink-light">Destination</Label>
+                            <PlacesAutocomplete
+                              value={editDestination}
+                              onChange={(value) => setEditDestination(value)}
+                              placeholder="Search for a destination..."
+                              className="text-sm"
+                            />
+                          </div>
+                          {/* Dates */}
+                          <div className="space-y-1">
+                            <Label className="text-xs text-ink-light">Dates</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Input
+                                type="date"
+                                value={editStartDate}
+                                onChange={(e) => {
+                                  setEditStartDate(e.target.value)
+                                  if (editEndDate && editEndDate < e.target.value) {
+                                    setEditEndDate(e.target.value)
+                                  }
+                                }}
+                                className="h-9 text-sm"
+                              />
+                              <Input
+                                type="date"
+                                value={editEndDate}
+                                min={editStartDate}
+                                onChange={(e) => setEditEndDate(e.target.value)}
+                                className="h-9 text-sm"
+                              />
+                            </div>
+                          </div>
+                          {/* Travelers */}
+                          <div className="space-y-1">
+                            <Label className="text-xs text-ink-light">Travelers</Label>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={20}
+                              value={editTravelers}
+                              onChange={(e) => setEditTravelers(e.target.value)}
+                              onBlur={() => {
+                                const num = parseInt(editTravelers)
+                                if (!num || num < 1) setEditTravelers('1')
+                                else if (num > 20) setEditTravelers('20')
+                              }}
+                              className="h-9 text-sm"
+                            />
+                          </div>
+                          {/* Actions */}
+                          <div className="flex gap-2 pt-2">
+                            <Button size="sm" onClick={handleSaveDetails} className="flex-1 h-9 text-sm">
+                              <Check className="h-4 w-4 mr-1" />
+                              Save
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={handleCancelEditDetails} className="flex-1 h-9 text-sm">
+                              Cancel
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Calendar className="h-5 w-5 text-terracotta shrink-0" />
-                        <div>
-                          <p className="text-sm text-ink-light">Dates</p>
-                          <p className="font-medium">{searchDepartDate} - {searchReturnDate}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Users className="h-5 w-5 text-terracotta shrink-0" />
-                        <div>
-                          <p className="text-sm text-ink-light">Travelers</p>
-                          <p className="font-medium">{searchTravelers} {searchTravelers === 1 ? 'person' : 'people'}</p>
-                        </div>
-                      </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-3">
+                            <MapPin className="h-5 w-5 text-terracotta shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-sm text-ink-light">Destination</p>
+                              <p className="font-medium truncate">{trip.destination}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Calendar className="h-5 w-5 text-terracotta shrink-0" />
+                            <div>
+                              <p className="text-sm text-ink-light">Dates</p>
+                              <p className="font-medium">
+                                {new Date(trip.start_date.split('T')[0] + 'T00:00:00').toLocaleDateString()} - {new Date(trip.end_date.split('T')[0] + 'T00:00:00').toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Users className="h-5 w-5 text-terracotta shrink-0" />
+                            <div>
+                              <p className="text-sm text-ink-light">Travelers</p>
+                              <p className="font-medium">{trip.preferences.num_travelers || 1} {(trip.preferences.num_travelers || 1) === 1 ? 'person' : 'people'}</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </CardContent>
                   </Card>
 
@@ -979,35 +1108,112 @@ export function TripDetail() {
             {/* Trip Info */}
             <Card className="p-6">
               <CardHeader className="p-0 mb-4">
-                <CardTitle className="text-lg font-serif">Trip Details</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-serif">Trip Details</CardTitle>
+                  {canEdit && !isEditingDetails && (
+                    <Button variant="ghost" size="sm" onClick={handleEditDetails} className="gap-1 text-xs">
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-4 p-0">
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-terracotta" />
-                  <div>
-                    <p className="text-sm text-ink-light">Destination</p>
-                    <p className="font-medium">{searchDestination.split(',')[0]}</p>
-                    {searchOrigin && (
-                      <p className="text-xs text-ink-light">From: {searchOrigin}</p>
-                    )}
+                {isEditingDetails ? (
+                  <div className="space-y-4">
+                    {/* Destination */}
+                    <div className="space-y-1">
+                      <Label className="text-xs text-ink-light">Destination</Label>
+                      <PlacesAutocomplete
+                        value={editDestination}
+                        onChange={(value) => setEditDestination(value)}
+                        placeholder="Search for a destination..."
+                        className="text-sm"
+                      />
+                    </div>
+                    {/* Dates */}
+                    <div className="space-y-1">
+                      <Label className="text-xs text-ink-light">Dates</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="date"
+                          value={editStartDate}
+                          onChange={(e) => {
+                            setEditStartDate(e.target.value)
+                            // If end date is before new start, update it
+                            if (editEndDate && editEndDate < e.target.value) {
+                              setEditEndDate(e.target.value)
+                            }
+                          }}
+                          className="h-8 text-xs"
+                        />
+                        <Input
+                          type="date"
+                          value={editEndDate}
+                          min={editStartDate}
+                          onChange={(e) => setEditEndDate(e.target.value)}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                    </div>
+                    {/* Travelers */}
+                    <div className="space-y-1">
+                      <Label className="text-xs text-ink-light">Travelers</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={editTravelers}
+                        onChange={(e) => setEditTravelers(e.target.value)}
+                        onBlur={() => {
+                          const num = parseInt(editTravelers)
+                          if (!num || num < 1) setEditTravelers('1')
+                          else if (num > 20) setEditTravelers('20')
+                        }}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    {/* Actions */}
+                    <div className="flex gap-2 pt-2">
+                      <Button size="sm" onClick={handleSaveDetails} className="h-8 text-xs">
+                        <Check className="h-3 w-3 mr-1" />
+                        Save Changes
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={handleCancelEditDetails} className="h-8 text-xs">
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-terracotta" />
-                  <div>
-                    <p className="text-sm text-ink-light">Dates</p>
-                    <p className="font-medium">
-                      {searchDepartDate} - {searchReturnDate}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Users className="h-5 w-5 text-terracotta" />
-                  <div>
-                    <p className="text-sm text-ink-light">Travelers</p>
-                    <p className="font-medium">{searchTravelers} {searchTravelers === 1 ? 'person' : 'people'}</p>
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <MapPin className="h-5 w-5 text-terracotta" />
+                      <div>
+                        <p className="text-sm text-ink-light">Destination</p>
+                        <p className="font-medium">{trip.destination}</p>
+                        {searchOrigin && (
+                          <p className="text-xs text-ink-light">From: {searchOrigin}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-5 w-5 text-terracotta" />
+                      <div>
+                        <p className="text-sm text-ink-light">Dates</p>
+                        <p className="font-medium">
+                          {new Date(trip.start_date.split('T')[0] + 'T00:00:00').toLocaleDateString()} - {new Date(trip.end_date.split('T')[0] + 'T00:00:00').toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Users className="h-5 w-5 text-terracotta" />
+                      <div>
+                        <p className="text-sm text-ink-light">Travelers</p>
+                        <p className="font-medium">{trip.preferences.num_travelers || 1} {(trip.preferences.num_travelers || 1) === 1 ? 'person' : 'people'}</p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 

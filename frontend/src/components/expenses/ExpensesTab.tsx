@@ -1,23 +1,42 @@
 import { useState, useEffect } from 'react'
-import { Plus, DollarSign, ArrowRight } from 'lucide-react'
+import { Plus, DollarSign, ArrowRight, Plane, Hotel, MapPin, Utensils, Car } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { api } from '@/lib/api'
-import type { Expense, ExpenseSummary, SettlementPlan, TripMember } from '@/types'
+import type { Expense, ExpenseSummary, SettlementPlan, TripMember, ItineraryItem, ItineraryItemType } from '@/types'
 import { ExpenseCard } from './ExpenseCard'
 import { ExpenseForm } from './ExpenseForm'
 import { cn } from '@/lib/utils'
+
+const ITEM_ICONS: Record<ItineraryItemType, React.ReactNode> = {
+  flight: <Plane className="h-4 w-4" />,
+  hotel: <Hotel className="h-4 w-4" />,
+  experience: <MapPin className="h-4 w-4" />,
+  restaurant: <Utensils className="h-4 w-4" />,
+  transport: <Car className="h-4 w-4" />,
+}
 
 interface ExpensesTabProps {
   tripId: string
   members: TripMember[]
   currentUserId?: string
   canEdit?: boolean
+  itineraryItems?: ItineraryItem[]
 }
 
-export function ExpensesTab({ tripId, members, currentUserId, canEdit = true }: ExpensesTabProps) {
+export function ExpensesTab({ tripId, members, currentUserId, canEdit = true, itineraryItems = [] }: ExpensesTabProps) {
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [summary, setSummary] = useState<ExpenseSummary | null>(null)
+
+  // Calculate itinerary costs
+  const itineraryCosts = itineraryItems
+    .filter(item => item.price && item.price > 0)
+    .reduce((acc, item) => {
+      acc.total += item.price || 0
+      acc.byType[item.type] = (acc.byType[item.type] || 0) + (item.price || 0)
+      acc.items.push(item)
+      return acc
+    }, { total: 0, byType: {} as Record<string, number>, items: [] as ItineraryItem[] })
   const [settlements, setSettlements] = useState<SettlementPlan | null>(null)
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -96,13 +115,57 @@ export function ExpensesTab({ tripId, members, currentUserId, canEdit = true }: 
         )}
       </div>
 
+      {/* Itinerary Budget - show costs from booked items */}
+      {itineraryCosts.total > 0 && (
+        <Card className="bg-sand">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-serif">Trip Budget</CardTitle>
+              <span className="text-2xl font-semibold">${itineraryCosts.total.toFixed(2)}</span>
+            </div>
+            <CardDescription>Estimated costs from your itinerary</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-2">
+              {Object.entries(itineraryCosts.byType).map(([type, amount]) => (
+                <div key={type} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    {ITEM_ICONS[type as ItineraryItemType]}
+                    <span className="capitalize">{type}s</span>
+                  </div>
+                  <span className="font-medium">${amount.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+            {itineraryCosts.items.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-sand-dark">
+                <p className="text-xs text-ink-light mb-2">Items with prices:</p>
+                <div className="space-y-1.5">
+                  {itineraryCosts.items.slice(0, 5).map(item => (
+                    <div key={item.id} className="flex items-center justify-between text-xs">
+                      <span className="truncate mr-2">{item.title}</span>
+                      <span className="shrink-0">${item.price?.toFixed(2)}</span>
+                    </div>
+                  ))}
+                  {itineraryCosts.items.length > 5 && (
+                    <p className="text-xs text-ink-light">
+                      +{itineraryCosts.items.length - 5} more items
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Cards */}
       {summary && (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
           {/* Total */}
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Total Expenses</CardDescription>
+              <CardDescription>Shared Expenses</CardDescription>
               <CardTitle className="text-2xl">
                 ${Number(summary.total_expenses).toFixed(2)}
               </CardTitle>
