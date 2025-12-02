@@ -301,7 +301,7 @@ export function TripQuestionnaire() {
                 <div>
                   <dt className="text-ink-light">Dates</dt>
                   <dd className="font-medium">
-                    {new Date(preferences.start_date!).toLocaleDateString()} - {new Date(preferences.end_date!).toLocaleDateString()}
+                    {new Date(preferences.start_date! + 'T00:00:00').toLocaleDateString()} - {new Date(preferences.end_date! + 'T00:00:00').toLocaleDateString()}
                   </dd>
                 </div>
                 <div>

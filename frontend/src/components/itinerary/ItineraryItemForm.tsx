@@ -197,12 +197,12 @@ export function ItineraryItemForm({ type, item, tripStartDate, onSubmit, onCance
           </div>
 
           {/* Actions */}
-          <div className="flex gap-2 pt-2">
-            <Button type="submit" disabled={!isValid}>
-              {item ? 'Save Changes' : `Add ${config.label}`}
-            </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
+          <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
               Cancel
+            </Button>
+            <Button type="submit" disabled={!isValid} className="w-full sm:w-auto">
+              {item ? 'Save Changes' : `Add ${config.label}`}
             </Button>
           </div>
         </form>

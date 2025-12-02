@@ -257,18 +257,27 @@ export function ItineraryTab({
 
   // Generate all days between trip start and end dates
   const tripDays = useMemo((): DayData[] => {
-    const start = new Date(trip.start_date)
-    const end = new Date(trip.end_date)
+    // Parse dates in local timezone by appending T00:00:00
+    const startStr = trip.start_date.split('T')[0]
+    const endStr = trip.end_date.split('T')[0]
+    const start = new Date(startStr + 'T00:00:00')
+    const end = new Date(endStr + 'T00:00:00')
     const days: DayData[] = []
 
     const current = new Date(start)
     let dayNumber = 1
 
     while (current <= end) {
-      const dateString = current.toISOString().split('T')[0]
+      // Use local date string for comparison
+      const year = current.getFullYear()
+      const month = String(current.getMonth() + 1).padStart(2, '0')
+      const day = String(current.getDate()).padStart(2, '0')
+      const dateString = `${year}-${month}-${day}`
+
       const dayItems = localItems.filter(item => {
-        const itemDate = new Date(item.start_time).toISOString().split('T')[0]
-        return itemDate === dateString
+        // Parse item date in local timezone for comparison
+        const itemDateStr = item.start_time.split('T')[0]
+        return itemDateStr === dateString
       })
 
       days.push({
@@ -422,32 +431,68 @@ export function ItineraryTab({
       {/* Main Content */}
       <div className="flex-1 min-w-0">
         {/* Header with actions */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="mb-6 flex items-center justify-between gap-4">
           <h2 className="text-xl font-serif text-ink">Itinerary</h2>
           {canEdit && (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onImport}
-                className="gap-1"
-              >
-                <Mail className="h-3 w-3" />
-                Import
-              </Button>
-              {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
+            <>
+              {/* Mobile: Compact dropdown for add actions */}
+              <div className="flex gap-2 sm:hidden">
                 <Button
-                  key={type}
                   variant="outline"
                   size="sm"
-                  onClick={() => onAddItem(type)}
+                  onClick={onImport}
                   className="gap-1"
                 >
-                  <Plus className="h-3 w-3" />
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                  <Mail className="h-4 w-4" />
+                  <span className="sr-only">Import</span>
                 </Button>
-              ))}
-            </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" className="gap-1">
+                      <Plus className="h-4 w-4" />
+                      Add
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
+                      <DropdownMenuItem
+                        key={type}
+                        onClick={() => onAddItem(type)}
+                        className="gap-2"
+                      >
+                        {ITEM_ICONS[type]}
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Desktop: Full button row */}
+              <div className="hidden sm:flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onImport}
+                  className="gap-1"
+                >
+                  <Mail className="h-3 w-3" />
+                  Import
+                </Button>
+                {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
+                  <Button
+                    key={type}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onAddItem(type)}
+                    className="gap-1"
+                  >
+                    <Plus className="h-3 w-3" />
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </Button>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
