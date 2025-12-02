@@ -64,8 +64,12 @@ class Recommendation(BaseModel):
     location: Location | None = None
     rating: float | None = Field(ge=0, le=5, default=None)
     tags: list[str] = Field(default_factory=list, description="Tags like 'family-friendly', 'romantic', 'outdoor'")
+    website_url: str | None = Field(default=None, description="Official website URL for the place/business. Must be a valid, working URL.")
 
 
 class RecommendationList(BaseModel):
     """Wrapper for multiple recommendations."""
-    recommendations: list[Recommendation]
+    recommendations: list[Recommendation] = Field(
+        min_length=1,
+        description="List of recommendations. MUST contain the exact number of items requested by the user."
+    )

@@ -1,4 +1,5 @@
-from app.services.ai.agents import recommendations_agent, RecommendationDeps
+import asyncio
+from app.services.ai.agents import single_recommendation_agent, RecommendationDeps
 from app.services.ai.schemas import Recommendation
 
 
@@ -25,16 +26,42 @@ async def get_trip_recommendations(
     Returns:
         List of Recommendation objects
     """
-    deps = RecommendationDeps(
-        destination=destination,
-        trip_dates=(start_date, end_date),
-        traveler_preferences=preferences or {},
-        existing_itinerary=existing_activities or [],
-    )
+    # Generate recommendations sequentially to avoid duplicates
+    async def generate_one(index: int, existing: list[str]) -> Recommendation:
+        deps = RecommendationDeps(
+            destination=destination,
+            trip_dates=(start_date, end_date),
+            traveler_preferences=preferences or {},
+            existing_itinerary=existing,
+        )
+        result = await single_recommendation_agent.run(
+            f"Generate ONE unique {category} recommendation (option #{index + 1} of {count}). "
+            f"Make it COMPLETELY DIFFERENT from places already listed. "
+            f"Focus on a high-quality, authentic local experience.",
+            deps=deps
+        )
+        return result.output
 
-    result = await recommendations_agent.run(
-        f"Suggest {count} {category} recommendations for this trip. "
-        f"Focus on high-quality, authentic local experiences.",
-        deps=deps
-    )
-    return result.output.recommendations
+    recommendations = []
+    existing = list(existing_activities or [])
+    seen_names = set(name.lower() for name in existing)
+
+    for i in range(count):
+        try:
+            rec = await generate_one(i, existing)
+            # Check for duplicates
+            if rec.name.lower() not in seen_names:
+                recommendations.append(rec)
+                existing.append(rec.name)
+                seen_names.add(rec.name.lower())
+            else:
+                # Retry once if duplicate
+                rec = await generate_one(i, existing)
+                if rec.name.lower() not in seen_names:
+                    recommendations.append(rec)
+                    existing.append(rec.name)
+                    seen_names.add(rec.name.lower())
+        except Exception:
+            continue  # Skip failed generations
+
+    return recommendations

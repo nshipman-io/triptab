@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pydantic_ai import Agent, RunContext
-from app.services.ai.schemas import ParsedReservation, RecommendationList
+from app.services.ai.schemas import ParsedReservation, Recommendation
 
 
 @dataclass
@@ -44,14 +44,14 @@ Guidelines:
 )
 
 
-# Recommendations Agent
-recommendations_agent = Agent(
+# Single Recommendation Agent - generates one recommendation at a time for reliability
+single_recommendation_agent = Agent(
     'openai:gpt-4o-mini',
     deps_type=RecommendationDeps,
-    output_type=RecommendationList,
+    output_type=Recommendation,
     instructions='''You are a knowledgeable travel advisor with expertise in destinations worldwide.
 
-Your task is to generate personalized recommendations based on the trip context provided.
+Your task is to generate ONE personalized recommendation based on the trip context provided.
 
 Guidelines:
 - PRIORITIZE recommendations that match the trip's vibe and preferences:
@@ -87,12 +87,28 @@ Guidelines:
 - Include approximate coordinates for map display when possible
 - Provide realistic cost estimates using $ symbols or specific amounts
 - Add relevant tags for filtering (family-friendly, romantic, adventure, etc.)
-- Explain WHY each place is recommended based on the specific preferences''',
+- Explain WHY each place is recommended based on the specific preferences
+
+IMPORTANT - Website URLs:
+- For EVERY recommendation, try to include a website URL in the website_url field
+- PREFER these reliable platforms that are less likely to have broken links:
+  - Google Maps: "https://maps.google.com/?q=PLACE+NAME+CITY" (most reliable)
+  - TripAdvisor: "https://www.tripadvisor.com/..." (for restaurants, hotels, attractions)
+  - Yelp: "https://www.yelp.com/biz/..." (for restaurants)
+  - Booking.com: "https://www.booking.com/hotel/..." (for hotels)
+- Only use official business websites if you are CERTAIN they exist (major chains, famous landmarks)
+- The URL must be a complete, valid URL starting with https://
+- If you cannot provide a reliable URL, use a Google Maps search URL as fallback
+- NEVER guess or make up URLs - use Google Maps search if unsure
+- Examples:
+  - "https://maps.google.com/?q=Arenal+Volcano+National+Park+Costa+Rica"
+  - "https://www.tripadvisor.com/Restaurant_Review-..."
+  - "https://www.booking.com/hotel/cr/..."''',
     retries=2,
 )
 
 
-@recommendations_agent.instructions
+@single_recommendation_agent.instructions
 async def add_trip_context(ctx: RunContext[RecommendationDeps]) -> str:
     """Dynamic instructions with trip context."""
     deps = ctx.deps
@@ -120,8 +136,7 @@ Trip Vibe & Preferences:
 - Interests: {activities_str} (IMPORTANT: prioritize these activity types)
 {f'- Special Requirements: {special_requirements}' if special_requirements else ''}
 
-Already planned: {existing}
+Already planned (DO NOT recommend these): {existing}
 
-CRITICAL: Your recommendations MUST align with the travel type, budget, and interests above.
-Do not recommend places already in the itinerary.
+CRITICAL: Your recommendation MUST be different from all places listed above. Pick something unique and interesting.
 '''

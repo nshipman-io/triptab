@@ -485,6 +485,7 @@ export function TripDetail() {
                 <ExploreTab
                   tripId={id!}
                   tripStartDate={trip.start_date}
+                  tripEndDate={trip.end_date}
                   tripDestination={trip.destination}
                   onAddToItinerary={reloadItems}
                   canEdit={canEdit}

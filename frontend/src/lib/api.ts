@@ -142,6 +142,20 @@ class ApiClient {
     })
   }
 
+  async reorderItineraryItems(tripId: string, itemIds: string[]) {
+    return this.request(`/trips/${tripId}/itinerary/reorder`, {
+      method: 'PUT',
+      body: JSON.stringify({ item_ids: itemIds }),
+    })
+  }
+
+  async moveItineraryItem(tripId: string, itemId: string, newDate: string, newOrder: number = 0) {
+    return this.request(`/trips/${tripId}/itinerary/move`, {
+      method: 'PUT',
+      body: JSON.stringify({ item_id: itemId, new_date: newDate, new_order: newOrder }),
+    })
+  }
+
   // Trip members endpoints
   async getTripMembers(tripId: string) {
     return this.request(`/trips/${tripId}/members`)
