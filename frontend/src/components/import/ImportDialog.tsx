@@ -27,6 +27,7 @@ export function ImportDialog({ tripId, onSuccess, onClose }: ImportDialogProps) 
   const [emailContent, setEmailContent] = useState('')
   const [parsedData, setParsedData] = useState<ParsedReservation | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [markAsBooked, setMarkAsBooked] = useState(true)
 
   const handleParse = async () => {
     if (!emailContent.trim()) return
@@ -50,7 +51,11 @@ export function ImportDialog({ tripId, onSuccess, onClose }: ImportDialogProps) 
     setStep('confirming')
 
     try {
-      await api.confirmImport(tripId, parsedData as unknown as Record<string, unknown>)
+      await api.confirmImport(
+        tripId,
+        parsedData as unknown as Record<string, unknown>,
+        { booking_confirmed: markAsBooked }
+      )
       setStep('success')
       setTimeout(() => {
         onSuccess()
@@ -159,6 +164,20 @@ export function ImportDialog({ tripId, onSuccess, onClose }: ImportDialogProps) 
                 </span>
               </div>
             </div>
+
+            {/* Booking confirmation checkbox */}
+            <label className="flex items-center gap-3 cursor-pointer rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+              <input
+                type="checkbox"
+                checked={markAsBooked}
+                onChange={(e) => setMarkAsBooked(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <div className="flex items-center gap-2">
+                <Check className={cn("h-4 w-4", markAsBooked ? "text-green-600" : "text-muted-foreground")} />
+                <span className="text-sm font-medium">Mark as booked</span>
+              </div>
+            </label>
 
             <div className="flex gap-2">
               <Button onClick={handleConfirm}>

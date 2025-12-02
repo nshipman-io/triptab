@@ -55,6 +55,11 @@ export function TripDetail() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  // Edit trip dates state
+  const [isEditingDates, setIsEditingDates] = useState(false)
+  const [editStartDate, setEditStartDate] = useState('')
+  const [editEndDate, setEditEndDate] = useState('')
+
   // Itinerary item form state
   const [showItemForm, setShowItemForm] = useState(false)
   const [itemFormType, setItemFormType] = useState<ItineraryItemType>('experience')
@@ -240,6 +245,36 @@ export function TripDetail() {
     if (!id) return
     const updatedTrip = await api.updateTrip(id, { preferences })
     setTrip(updatedTrip as Trip)
+  }
+
+  const handleEditDates = () => {
+    if (!trip) return
+    setEditStartDate(formatDateForInput(trip.start_date))
+    setEditEndDate(formatDateForInput(trip.end_date))
+    setIsEditingDates(true)
+  }
+
+  const handleSaveDates = async () => {
+    if (!id || !editStartDate || !editEndDate) return
+    try {
+      const updatedTrip = await api.updateTrip(id, {
+        start_date: editStartDate,
+        end_date: editEndDate,
+      })
+      setTrip(updatedTrip as Trip)
+      // Update search params to match
+      setSearchDepartDate(editStartDate)
+      setSearchReturnDate(editEndDate)
+      setIsEditingDates(false)
+    } catch (error) {
+      console.error('Failed to update trip dates:', error)
+    }
+  }
+
+  const handleCancelEditDates = () => {
+    setIsEditingDates(false)
+    setEditStartDate('')
+    setEditEndDate('')
   }
 
   if (loading) {
@@ -979,7 +1014,15 @@ export function TripDetail() {
             {/* Trip Info */}
             <Card className="p-6">
               <CardHeader className="p-0 mb-4">
-                <CardTitle className="text-lg font-serif">Trip Details</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-serif">Trip Details</CardTitle>
+                  {canEdit && !isEditingDates && (
+                    <Button variant="ghost" size="sm" onClick={handleEditDates} className="gap-1 text-xs">
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-4 p-0">
                 <div className="flex items-center gap-3">
@@ -994,11 +1037,39 @@ export function TripDetail() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Calendar className="h-5 w-5 text-terracotta" />
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm text-ink-light">Dates</p>
-                    <p className="font-medium">
-                      {searchDepartDate} - {searchReturnDate}
-                    </p>
+                    {isEditingDates ? (
+                      <div className="space-y-2 mt-1">
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input
+                            type="date"
+                            value={editStartDate}
+                            onChange={(e) => setEditStartDate(e.target.value)}
+                            className="h-8 text-xs"
+                          />
+                          <Input
+                            type="date"
+                            value={editEndDate}
+                            onChange={(e) => setEditEndDate(e.target.value)}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <div className="flex gap-1">
+                          <Button size="sm" onClick={handleSaveDates} className="h-7 text-xs">
+                            <Check className="h-3 w-3 mr-1" />
+                            Save
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={handleCancelEditDates} className="h-7 text-xs">
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="font-medium">
+                        {new Date(trip.start_date.split('T')[0] + 'T00:00:00').toLocaleDateString()} - {new Date(trip.end_date.split('T')[0] + 'T00:00:00').toLocaleDateString()}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
