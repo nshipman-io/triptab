@@ -488,7 +488,7 @@ export function ItineraryTab({
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0 overflow-x-hidden">
+      <div className="flex-1 min-w-0">
         {/* Header with actions */}
         <div className="mb-4 sm:mb-6 flex items-center justify-between gap-2">
           <h2 className="text-lg sm:text-xl font-serif text-ink shrink-0">Itinerary</h2>

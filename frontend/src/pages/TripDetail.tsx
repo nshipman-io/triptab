@@ -314,7 +314,7 @@ export function TripDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-sand overflow-x-hidden">
+    <div className="min-h-screen bg-sand w-full max-w-full">
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
