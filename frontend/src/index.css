@@ -51,6 +51,11 @@
     box-sizing: border-box;
   }
 
+  /* Force everything to respect viewport width */
+  *, *::before, *::after {
+    max-width: 100%;
+  }
+
   html {
     scroll-behavior: smooth;
     overflow-x: hidden;
@@ -73,6 +78,12 @@
   /* Prevent iOS bounce/overscroll from causing layout issues */
   body {
     overscroll-behavior-x: none;
+    overscroll-behavior-y: auto;
+  }
+
+  /* Fix for iOS Safari horizontal scroll issues */
+  #root {
+    overflow-x: clip;
   }
 
   /* Noise texture overlay for that organic feel */
