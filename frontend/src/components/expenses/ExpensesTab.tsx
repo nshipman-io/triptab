@@ -113,53 +113,52 @@ export function ExpensesTab({ tripId, members, currentUserId, canEdit = true, it
   }
 
   return (
-    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
+    <div className="space-y-4 sm:space-y-6 w-full overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Expenses</h2>
+        <h2 className="text-lg sm:text-xl font-serif text-ink">Expenses</h2>
         {canEdit && (
-          <Button onClick={() => setShowForm(true)} size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Expense
+          <Button onClick={() => setShowForm(true)} size="sm" className="h-8 gap-1 px-2 sm:px-3">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Add Expense</span>
+            <span className="sm:hidden">Add</span>
           </Button>
         )}
       </div>
 
       {/* Itinerary Budget - show costs from booked items */}
       {itineraryCosts.total > 0 && (
-        <Card className="bg-sand">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-serif">Trip Budget</CardTitle>
-              <span className="text-2xl font-semibold">${itineraryCosts.total.toFixed(2)}</span>
-            </div>
-            <CardDescription>Estimated costs from your itinerary</CardDescription>
+        <Card className="bg-sand overflow-hidden">
+          <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-3">
+            <CardTitle className="text-base sm:text-lg font-serif">Trip Budget</CardTitle>
+            <p className="text-xl sm:text-2xl font-semibold">${itineraryCosts.total.toFixed(2)}</p>
+            <CardDescription className="text-xs sm:text-sm">Estimated costs from your itinerary</CardDescription>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-2">
+          <CardContent className="p-3 sm:p-6 pt-0">
+            <div className="space-y-1.5 sm:space-y-2">
               {Object.entries(itineraryCosts.byType).map(([type, amount]) => (
-                <div key={type} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
+                <div key={type} className="flex items-center justify-between text-xs sm:text-sm">
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                     {ITEM_ICONS[type as ItineraryItemType]}
                     <span className="capitalize">{type}s</span>
                   </div>
-                  <span className="font-medium">${amount.toFixed(2)}</span>
+                  <span className="font-medium shrink-0">${amount.toFixed(2)}</span>
                 </div>
               ))}
             </div>
             {itineraryCosts.items.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-sand-dark">
-                <p className="text-xs text-ink-light mb-2">Items with prices:</p>
-                <div className="space-y-1.5">
-                  {itineraryCosts.items.slice(0, 5).map(item => (
-                    <div key={item.id} className="flex items-center justify-between text-xs">
-                      <span className="truncate mr-2">{item.title}</span>
+              <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-sand-dark">
+                <p className="text-xs text-ink-light mb-1.5 sm:mb-2">Items with prices:</p>
+                <div className="space-y-1">
+                  {itineraryCosts.items.slice(0, 3).map(item => (
+                    <div key={item.id} className="flex items-center justify-between text-xs gap-2">
+                      <span className="truncate min-w-0 flex-1">{item.title}</span>
                       <span className="shrink-0">${item.price?.toFixed(2)}</span>
                     </div>
                   ))}
-                  {itineraryCosts.items.length > 5 && (
+                  {itineraryCosts.items.length > 3 && (
                     <p className="text-xs text-ink-light">
-                      +{itineraryCosts.items.length - 5} more items
+                      +{itineraryCosts.items.length - 3} more items
                     </p>
                   )}
                 </div>
@@ -169,52 +168,50 @@ export function ExpensesTab({ tripId, members, currentUserId, canEdit = true, it
         </Card>
       )}
 
-      {/* Summary Cards */}
+      {/* Summary Cards - Grid on mobile, 3 cols on desktop */}
       {summary && (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {/* Total */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Shared Expenses</CardDescription>
-              <CardTitle className="text-2xl">
-                ${Number(summary.total_expenses).toFixed(2)}
+          <Card className="overflow-hidden">
+            <CardHeader className="p-2 sm:p-6 pb-1 sm:pb-2">
+              <CardDescription className="text-[10px] sm:text-xs">Expenses</CardDescription>
+              <CardTitle className="text-sm sm:text-2xl">
+                ${Number(summary.total_expenses).toFixed(0)}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                {summary.expense_count} expense{summary.expense_count !== 1 ? 's' : ''}
+            <CardContent className="p-2 sm:p-6 pt-0">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
+                {summary.expense_count} item{summary.expense_count !== 1 ? 's' : ''}
               </p>
             </CardContent>
           </Card>
 
           {/* Balances */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Your Balance</CardDescription>
+          <Card className="overflow-hidden">
+            <CardHeader className="p-2 sm:p-6 pb-1 sm:pb-2">
+              <CardDescription className="text-[10px] sm:text-xs">Balance</CardDescription>
               {(() => {
                 const userBalance = currentUserId
                   ? summary.balances.find(b => b.user_id === currentUserId)
                   : summary.balances[0]
                 return userBalance ? (
-                  <>
-                    <CardTitle className={cn(
-                      "text-2xl",
-                      userBalance.net_balance > 0 ? "text-green-600" : userBalance.net_balance < 0 ? "text-red-600" : ""
-                    )}>
-                      {userBalance.net_balance >= 0 ? '+' : ''}${Number(userBalance.net_balance).toFixed(2)}
-                    </CardTitle>
-                  </>
+                  <CardTitle className={cn(
+                    "text-sm sm:text-2xl",
+                    userBalance.net_balance > 0 ? "text-green-600" : userBalance.net_balance < 0 ? "text-red-600" : ""
+                  )}>
+                    {userBalance.net_balance >= 0 ? '+' : ''}${Math.abs(Number(userBalance.net_balance)).toFixed(0)}
+                  </CardTitle>
                 ) : null
               })()}
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-2 sm:p-6 pt-0">
               {(() => {
                 const userBalance = currentUserId
                   ? summary.balances.find(b => b.user_id === currentUserId)
                   : summary.balances[0]
                 return (
-                  <p className="text-xs text-muted-foreground">
-                    {userBalance?.net_balance != null && userBalance.net_balance >= 0 ? 'You are owed' : 'You owe'}
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    {userBalance?.net_balance != null && userBalance.net_balance >= 0 ? 'Owed' : 'Owe'}
                   </p>
                 )
               })()}
@@ -222,16 +219,16 @@ export function ExpensesTab({ tripId, members, currentUserId, canEdit = true, it
           </Card>
 
           {/* Settlements */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Settlements Needed</CardDescription>
-              <CardTitle className="text-2xl">
+          <Card className="overflow-hidden">
+            <CardHeader className="p-2 sm:p-6 pb-1 sm:pb-2">
+              <CardDescription className="text-[10px] sm:text-xs">Settle</CardDescription>
+              <CardTitle className="text-sm sm:text-2xl">
                 {settlements?.total_transactions || 0}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                transaction{settlements?.total_transactions !== 1 ? 's' : ''} to settle up
+            <CardContent className="p-2 sm:p-6 pt-0">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
+                pending
               </p>
             </CardContent>
           </Card>
@@ -240,30 +237,26 @@ export function ExpensesTab({ tripId, members, currentUserId, canEdit = true, it
 
       {/* Settlement Plan */}
       {settlements && settlements.settlements.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Settlement Plan</CardTitle>
-            <CardDescription>Optimized payments to settle all balances</CardDescription>
+        <Card className="overflow-hidden">
+          <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg">Settlement Plan</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Payments to settle all balances</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-6 pt-0">
             <div className="space-y-2">
               {settlements.settlements.map((settlement, index) => (
                 <div
                   key={index}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border p-3"
+                  className="flex items-center gap-2 rounded-lg border p-2 sm:p-3"
                 >
-                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                    <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-primary/10 text-xs sm:text-sm font-medium text-primary shrink-0">
-                      {settlement.from_user_name.charAt(0)}
-                    </div>
-                    <span className="font-medium text-sm sm:text-base truncate max-w-20 sm:max-w-none">{settlement.from_user_name}</span>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-primary/10 text-xs sm:text-sm font-medium text-primary shrink-0">
-                      {settlement.to_user_name.charAt(0)}
-                    </div>
-                    <span className="font-medium text-sm sm:text-base truncate max-w-20 sm:max-w-none">{settlement.to_user_name}</span>
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary shrink-0">
+                    {settlement.from_user_name.charAt(0)}
                   </div>
-                  <span className="font-semibold text-green-600 text-right">
+                  <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary shrink-0">
+                    {settlement.to_user_name.charAt(0)}
+                  </div>
+                  <span className="font-semibold text-green-600 text-sm shrink-0 ml-auto">
                     ${Number(settlement.amount).toFixed(2)}
                   </span>
                 </div>

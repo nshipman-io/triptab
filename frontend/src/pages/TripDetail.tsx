@@ -428,7 +428,7 @@ export function TripDetail() {
         </div>
       </header>
 
-      <main className="w-full max-w-full px-4 md:container md:mx-auto md:px-6 py-6 md:py-8 overflow-x-hidden">
+      <main className="w-full px-4 md:container md:mx-auto md:px-6 py-6 md:py-8 overflow-hidden">
         {/* Import Dialog */}
         {showImportDialog && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -440,9 +440,9 @@ export function TripDetail() {
           </div>
         )}
 
-        <div className="grid gap-6 lg:gap-8 lg:grid-cols-3 w-full max-w-full">
+        <div className="grid gap-6 lg:gap-8 lg:grid-cols-3 w-full overflow-hidden">
           {/* Main Content - Tabs */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 min-w-0 overflow-hidden">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               {/* Desktop tabs */}
               <TabsList className="mb-6 w-full hidden lg:grid lg:grid-cols-4">

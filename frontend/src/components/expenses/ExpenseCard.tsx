@@ -36,7 +36,7 @@ export function ExpenseCard({ expense, onEdit, onDelete, canEdit = true }: Expen
   })
 
   return (
-    <Card className="w-full">
+    <Card className="w-full overflow-hidden">
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-start sm:items-center gap-3">
           {/* Category Icon */}
