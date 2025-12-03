@@ -36,46 +36,50 @@ export function ExpenseCard({ expense, onEdit, onDelete, canEdit = true }: Expen
   })
 
   return (
-    <Card>
-      <CardContent className="flex items-center gap-4 p-4">
-        {/* Category Icon */}
-        <div className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-full",
-          CATEGORY_COLORS[expense.category]
-        )}>
-          {CATEGORY_ICONS[expense.category]}
-        </div>
-
-        {/* Details */}
-        <div className="flex-1 min-w-0">
-          <h4 className="font-medium truncate">{expense.description}</h4>
-          <p className="text-sm text-muted-foreground">
-            {formattedDate} • {expense.split_type} split
-          </p>
-        </div>
-
-        {/* Amount */}
-        <div className="text-right">
-          <p className="font-semibold">
-            {expense.currency === 'USD' ? '$' : expense.currency}
-            {Number(expense.amount).toFixed(2)}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {expense.splits.length} {expense.splits.length === 1 ? 'person' : 'people'}
-          </p>
-        </div>
-
-        {/* Actions */}
-        {canEdit && (
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={onEdit} className="h-8 w-8">
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={onDelete} className="h-8 w-8 text-muted-foreground hover:text-destructive">
-              <Trash2 className="h-4 w-4" />
-            </Button>
+    <Card className="w-full">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-start sm:items-center gap-3">
+          {/* Category Icon */}
+          <div className={cn(
+            "flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full shrink-0",
+            CATEGORY_COLORS[expense.category]
+          )}>
+            {CATEGORY_ICONS[expense.category]}
           </div>
-        )}
+
+          {/* Details & Amount */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <h4 className="font-medium truncate text-sm sm:text-base">{expense.description}</h4>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  {formattedDate} • {expense.split_type}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="font-semibold text-sm sm:text-base">
+                  {expense.currency === 'USD' ? '$' : expense.currency}
+                  {Number(expense.amount).toFixed(2)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {expense.splits.length} {expense.splits.length === 1 ? 'person' : 'people'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          {canEdit && (
+            <div className="flex items-center gap-0.5 shrink-0">
+              <Button variant="ghost" size="icon" onClick={onEdit} className="h-7 w-7 sm:h-8 sm:w-8">
+                <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={onDelete} className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive">
+                <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   )

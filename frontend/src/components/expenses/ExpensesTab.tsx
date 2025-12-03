@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Plus, DollarSign, ArrowRight, Plane, Hotel, MapPin, Utensils, Car } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -41,10 +41,20 @@ export function ExpensesTab({ tripId, members, currentUserId, canEdit = true, it
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
+  const formRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     loadData()
   }, [tripId])
+
+  // Scroll to form when it's shown
+  useEffect(() => {
+    if ((showForm || editingExpense) && formRef.current) {
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 100)
+    }
+  }, [showForm, editingExpense])
 
   const loadData = async () => {
     try {
@@ -265,15 +275,17 @@ export function ExpensesTab({ tripId, members, currentUserId, canEdit = true, it
 
       {/* Expense Form */}
       {canEdit && (showForm || editingExpense) && (
-        <ExpenseForm
-          expense={editingExpense}
-          members={members}
-          onSubmit={editingExpense ? handleUpdateExpense : handleCreateExpense}
-          onCancel={() => {
-            setShowForm(false)
-            setEditingExpense(null)
-          }}
-        />
+        <div ref={formRef}>
+          <ExpenseForm
+            expense={editingExpense}
+            members={members}
+            onSubmit={editingExpense ? handleUpdateExpense : handleCreateExpense}
+            onCancel={() => {
+              setShowForm(false)
+              setEditingExpense(null)
+            }}
+          />
+        </div>
       )}
 
       {/* Expenses List */}

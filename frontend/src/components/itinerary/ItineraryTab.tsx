@@ -148,120 +148,133 @@ function SortableItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group p-3 md:p-4",
+        "group p-3 md:p-4 w-full",
         isDragging && "shadow-lg ring-2 ring-forest",
         isSpanningDay && "opacity-75 border-dashed"
       )}
     >
-      <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 p-0">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+      <CardContent className="p-0">
+        <div className="flex items-start gap-2 sm:gap-3">
+          {/* Drag handle - desktop only */}
           {canEdit && !isSpanningDay && (
             <div
               {...attributes}
               {...listeners}
-              className="cursor-grab active:cursor-grabbing touch-none"
+              className="cursor-grab active:cursor-grabbing touch-none hidden sm:block pt-1"
             >
-              <GripVertical className="h-5 w-5 text-ink-light shrink-0 hidden sm:block hover:text-ink" />
+              <GripVertical className="h-5 w-5 text-ink-light hover:text-ink shrink-0" />
             </div>
           )}
-          <div className={cn("rounded-full p-2 shrink-0", ITEM_COLORS[item.type])}>
+
+          {/* Icon */}
+          <div className={cn("rounded-full p-1.5 sm:p-2 shrink-0 mt-0.5", ITEM_COLORS[item.type])}>
             {ITEM_ICONS[item.type]}
           </div>
+
+          {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h4 className="font-medium truncate">{item.title}</h4>
-              {multiDayLabel && (
-                <span className="text-xs bg-sand-dark text-ink-light px-1.5 py-0.5 rounded shrink-0">
-                  {multiDayLabel}
-                </span>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h4 className="font-medium text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">{item.title}</h4>
+                  {item.booking_confirmed && (
+                    <Check className="h-3.5 w-3.5 text-green-600 shrink-0" />
+                  )}
+                  {multiDayLabel && (
+                    <span className="text-xs bg-sand-dark text-ink-light px-1 py-0.5 rounded shrink-0">
+                      {multiDayLabel}
+                    </span>
+                  )}
+                </div>
+                {item.location && (
+                  <p className="text-xs sm:text-sm text-ink-light truncate">{item.location}</p>
+                )}
+                {/* Mobile: show time and price inline */}
+                <div className="flex items-center gap-2 mt-1 sm:hidden text-xs text-ink-light">
+                  <span>
+                    {new Date(item.start_time).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                  {item.price && !isSpanningDay && (
+                    <span>${item.price}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Desktop: time and price */}
+              <div className="text-right hidden sm:block shrink-0">
+                {!isSpanningDay && (
+                  <p className="text-sm">
+                    {new Date(item.start_time).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                )}
+                {item.price && !isSpanningDay && (
+                  <p className="text-sm text-ink-light">
+                    {item.currency || '$'}{item.price}
+                  </p>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              {canEdit && (
+                <div className="flex items-center gap-0.5 shrink-0">
+                  {/* Move to day - hidden on mobile */}
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hidden sm:flex h-7 w-7 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                      >
+                        <CalendarDays className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuLabel>Move to day</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {tripDays.map((day) => (
+                        <DropdownMenuItem
+                          key={day.dateString}
+                          disabled={day.dateString === currentDateString}
+                          onSelect={() => onMoveToDate(item.id, day.dateString)}
+                          className={cn(
+                            day.dateString === currentDateString && "opacity-50"
+                          )}
+                        >
+                          <span className="truncate">
+                            {day.date.getMonth() + 1}/{day.date.getDate()}/{day.date.getFullYear()}
+                          </span>
+                          {day.dateString === currentDateString && (
+                            <Check className="h-4 w-4 ml-auto" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEditItem(item)}
+                    className="h-7 w-7 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDeleteItem(item.id)}
+                    className="h-7 w-7 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-ink-light hover:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               )}
             </div>
-            {item.location && (
-              <p className="text-sm text-ink-light truncate">{item.location}</p>
-            )}
-          </div>
-          <div className="text-right sm:hidden">
-            <p className="text-sm">
-              {new Date(item.start_time).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-1">
-          <div className="text-right hidden sm:block">
-            {!isSpanningDay && (
-              <p className="text-sm">
-                {new Date(item.start_time).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </p>
-            )}
-            {item.price && !isSpanningDay && (
-              <p className="text-sm text-ink-light">
-                {item.currency || '$'}{item.price}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-0.5 sm:gap-1">
-            {item.booking_confirmed && (
-              <Check className="h-4 w-4 text-green-600 mr-1" />
-            )}
-            {canEdit && (
-              <>
-                {/* Move to day - hidden on mobile */}
-                <DropdownMenu modal={false}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="hidden sm:flex h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                    >
-                      <CalendarDays className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuLabel>Move to day</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {tripDays.map((day) => (
-                      <DropdownMenuItem
-                        key={day.dateString}
-                        disabled={day.dateString === currentDateString}
-                        onSelect={() => onMoveToDate(item.id, day.dateString)}
-                        className={cn(
-                          day.dateString === currentDateString && "opacity-50"
-                        )}
-                      >
-                        <span className="truncate">
-                          {day.date.getMonth() + 1}/{day.date.getDate()}/{day.date.getFullYear()}
-                        </span>
-                        {day.dateString === currentDateString && (
-                          <Check className="h-4 w-4 ml-auto" />
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onEditItem(item)}
-                  className="h-7 w-7 sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                >
-                  <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onDeleteItem(item.id)}
-                  className="h-7 w-7 sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-ink-light hover:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                </Button>
-              </>
-            )}
           </div>
         </div>
       </CardContent>
