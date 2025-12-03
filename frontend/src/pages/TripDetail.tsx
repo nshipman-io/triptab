@@ -314,7 +314,7 @@ export function TripDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-sand">
+    <div className="min-h-screen bg-sand overflow-x-hidden">
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -465,30 +465,24 @@ export function TripDetail() {
               </TabsList>
 
               {/* Mobile tabs - includes Book and Info */}
-              <TabsList className="mb-6 w-full grid grid-cols-6 lg:hidden">
-                <TabsTrigger value="itinerary" className="gap-1 text-xs px-1">
-                  <Calendar className="h-4 w-4" />
-                  <span className="hidden sm:inline">Itinerary</span>
+              <TabsList className="mb-6 w-full grid grid-cols-6 lg:hidden overflow-x-auto">
+                <TabsTrigger value="itinerary" className="text-xs px-1 min-w-0">
+                  <Calendar className="h-4 w-4 shrink-0" />
                 </TabsTrigger>
-                <TabsTrigger value="expenses" className="gap-1 text-xs px-1">
-                  <DollarSign className="h-4 w-4" />
-                  <span className="hidden sm:inline">Expenses</span>
+                <TabsTrigger value="expenses" className="text-xs px-1 min-w-0">
+                  <DollarSign className="h-4 w-4 shrink-0" />
                 </TabsTrigger>
-                <TabsTrigger value="checklists" className="gap-1 text-xs px-1">
-                  <ListTodo className="h-4 w-4" />
-                  <span className="hidden sm:inline">Checklists</span>
+                <TabsTrigger value="checklists" className="text-xs px-1 min-w-0">
+                  <ListTodo className="h-4 w-4 shrink-0" />
                 </TabsTrigger>
-                <TabsTrigger value="explore" className="gap-1 text-xs px-1">
-                  <Compass className="h-4 w-4" />
-                  <span className="hidden sm:inline">Explore</span>
+                <TabsTrigger value="explore" className="text-xs px-1 min-w-0">
+                  <Compass className="h-4 w-4 shrink-0" />
                 </TabsTrigger>
-                <TabsTrigger value="book" className="gap-1 text-xs px-1">
-                  <Search className="h-4 w-4" />
-                  <span className="hidden sm:inline">Book</span>
+                <TabsTrigger value="book" className="text-xs px-1 min-w-0">
+                  <Search className="h-4 w-4 shrink-0" />
                 </TabsTrigger>
-                <TabsTrigger value="info" className="gap-1 text-xs px-1">
-                  <Users className="h-4 w-4" />
-                  <span className="hidden sm:inline">Info</span>
+                <TabsTrigger value="info" className="text-xs px-1 min-w-0">
+                  <Users className="h-4 w-4 shrink-0" />
                 </TabsTrigger>
               </TabsList>
 

@@ -505,22 +505,23 @@ export function ItineraryTab({
                   <Mail className="h-4 w-4" />
                   <span className="sr-only">Import</span>
                 </Button>
-                <DropdownMenu modal={false}>
+                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button size="sm" className="gap-1 touch-manipulation">
+                    <Button size="sm" className="gap-1">
                       <Plus className="h-4 w-4" />
                       Add
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40 z-50" sideOffset={5}>
+                  <DropdownMenuContent align="end" className="w-40" sideOffset={4}>
                     {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
                       <DropdownMenuItem
                         key={type}
                         onSelect={() => onAddItem(type)}
-                        className="gap-2 touch-manipulation"
                       >
-                        {ITEM_ICONS[type]}
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                        <span className="flex items-center gap-2">
+                          {ITEM_ICONS[type]}
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </span>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
