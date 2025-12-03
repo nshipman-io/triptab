@@ -449,7 +449,7 @@ export function ItineraryTab({
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
+    <div className="flex flex-col lg:flex-row gap-6 w-full max-w-full overflow-x-hidden">
       {/* Sidebar Navigation - Hidden on mobile, shown on larger screens */}
       <aside className="hidden lg:block w-48 shrink-0">
         <div className="sticky top-6">
@@ -488,7 +488,7 @@ export function ItineraryTab({
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 w-full max-w-full overflow-x-hidden">
         {/* Header with actions */}
         <div className="mb-4 sm:mb-6 flex items-center justify-between gap-2">
           <h2 className="text-lg sm:text-xl font-serif text-ink shrink-0">Itinerary</h2>

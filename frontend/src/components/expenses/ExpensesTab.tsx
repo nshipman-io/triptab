@@ -103,7 +103,7 @@ export function ExpensesTab({ tripId, members, currentUserId, canEdit = true, it
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Expenses</h2>

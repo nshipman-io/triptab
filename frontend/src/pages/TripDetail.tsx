@@ -346,8 +346,8 @@ export function TripDetail() {
       )}
 
       {/* Header */}
-      <header className="border-b border-sand-dark bg-cream">
-        <div className="container mx-auto px-4 md:px-6 py-4">
+      <header className="border-b border-sand-dark bg-cream w-full max-w-full overflow-hidden">
+        <div className="w-full max-w-full px-4 md:container md:mx-auto md:px-6 py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 md:gap-4 min-w-0">
               <Link to="/dashboard">
@@ -428,7 +428,7 @@ export function TripDetail() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 md:px-6 py-6 md:py-8">
+      <main className="w-full max-w-full px-4 md:container md:mx-auto md:px-6 py-6 md:py-8 overflow-x-hidden">
         {/* Import Dialog */}
         {showImportDialog && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -440,7 +440,7 @@ export function TripDetail() {
           </div>
         )}
 
-        <div className="grid gap-6 lg:gap-8 lg:grid-cols-3">
+        <div className="grid gap-6 lg:gap-8 lg:grid-cols-3 w-full max-w-full">
           {/* Main Content - Tabs */}
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
