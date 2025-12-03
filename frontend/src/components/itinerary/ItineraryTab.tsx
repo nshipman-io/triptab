@@ -488,28 +488,28 @@ export function ItineraryTab({
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 overflow-x-hidden">
         {/* Header with actions */}
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <h2 className="text-xl font-serif text-ink">Itinerary</h2>
+        <div className="mb-4 sm:mb-6 flex items-center justify-between gap-2">
+          <h2 className="text-lg sm:text-xl font-serif text-ink shrink-0">Itinerary</h2>
           {canEdit && (
             <>
               {/* Mobile: Compact dropdown for add actions */}
-              <div className="flex gap-2 sm:hidden">
+              <div className="flex gap-1.5 sm:hidden shrink-0">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={onImport}
-                  className="gap-1"
+                  className="h-8 w-8 p-0"
                 >
                   <Mail className="h-4 w-4" />
                   <span className="sr-only">Import</span>
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button size="sm" className="gap-1">
+                    <Button size="sm" className="h-8 gap-1 px-2">
                       <Plus className="h-4 w-4" />
-                      Add
+                      <span>Add</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-40" sideOffset={4}>
