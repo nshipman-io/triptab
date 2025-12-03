@@ -205,21 +205,19 @@ function SortableItem({
               </p>
             )}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1">
             {item.booking_confirmed && (
-              <span className="flex items-center gap-1 text-xs sm:text-sm text-green-600 mr-1 sm:mr-2">
-                <Check className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Booked</span>
-              </span>
+              <Check className="h-4 w-4 text-green-600 mr-1" />
             )}
             {canEdit && (
               <>
-                <DropdownMenu>
+                {/* Move to day - hidden on mobile */}
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                      className="hidden sm:flex h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                     >
                       <CalendarDays className="h-4 w-4" />
                     </Button>
@@ -231,7 +229,7 @@ function SortableItem({
                       <DropdownMenuItem
                         key={day.dateString}
                         disabled={day.dateString === currentDateString}
-                        onClick={() => onMoveToDate(item.id, day.dateString)}
+                        onSelect={() => onMoveToDate(item.id, day.dateString)}
                         className={cn(
                           day.dateString === currentDateString && "opacity-50"
                         )}
@@ -250,17 +248,17 @@ function SortableItem({
                   variant="ghost"
                   size="icon"
                   onClick={() => onEditItem(item)}
-                  className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                  className="h-7 w-7 sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => onDeleteItem(item.id)}
-                  className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-ink-light hover:text-destructive"
+                  className="h-7 w-7 sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-ink-light hover:text-destructive"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
               </>
             )}
@@ -507,19 +505,19 @@ export function ItineraryTab({
                   <Mail className="h-4 w-4" />
                   <span className="sr-only">Import</span>
                 </Button>
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
-                    <Button size="sm" className="gap-1">
+                    <Button size="sm" className="gap-1 touch-manipulation">
                       <Plus className="h-4 w-4" />
                       Add
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuContent align="end" className="w-40 z-50" sideOffset={5}>
                     {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
                       <DropdownMenuItem
                         key={type}
-                        onClick={() => onAddItem(type)}
-                        className="gap-2"
+                        onSelect={() => onAddItem(type)}
+                        className="gap-2 touch-manipulation"
                       >
                         {ITEM_ICONS[type]}
                         {type.charAt(0).toUpperCase() + type.slice(1)}
