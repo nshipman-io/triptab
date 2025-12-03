@@ -75,6 +75,38 @@ interface ItineraryTabProps {
   onItemsReordered?: (items: ItineraryItem[]) => void
 }
 
+// Helper to check if an item is multi-day
+function isMultiDayItem(item: ItineraryItem): boolean {
+  if (!item.end_time) return false
+  const startDate = item.start_time.split('T')[0]
+  const endDate = item.end_time.split('T')[0]
+  return endDate > startDate
+}
+
+// Helper to get day label for multi-day items
+function getMultiDayLabel(item: ItineraryItem, currentDateString: string): string | null {
+  if (!isMultiDayItem(item)) return null
+
+  const startDate = item.start_time.split('T')[0]
+  const endDate = item.end_time!.split('T')[0]
+
+  // Calculate day number within the span
+  const start = new Date(startDate + 'T00:00:00')
+  const current = new Date(currentDateString + 'T00:00:00')
+  const end = new Date(endDate + 'T00:00:00')
+
+  const dayNum = Math.floor((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+  const totalDays = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+
+  if (currentDateString === startDate) {
+    return `Day 1 of ${totalDays}`
+  } else if (currentDateString === endDate) {
+    return `Day ${totalDays} of ${totalDays} (checkout)`
+  } else {
+    return `Day ${dayNum} of ${totalDays}`
+  }
+}
+
 // Sortable Item Component
 function SortableItem({
   item,
@@ -93,6 +125,8 @@ function SortableItem({
   tripDays: DayData[]
   currentDateString: string
 }) {
+  const multiDayLabel = getMultiDayLabel(item, currentDateString)
+  const isSpanningDay = multiDayLabel !== null && item.start_time.split('T')[0] !== currentDateString
   const {
     attributes,
     listeners,
@@ -113,110 +147,134 @@ function SortableItem({
     <Card
       ref={setNodeRef}
       style={style}
-      className={cn("group p-3 md:p-4", isDragging && "shadow-lg ring-2 ring-forest")}
+      className={cn(
+        "group p-3 md:p-4 w-full",
+        isDragging && "shadow-lg ring-2 ring-forest",
+        isSpanningDay && "opacity-75 border-dashed"
+      )}
     >
-      <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 p-0">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          {canEdit && (
+      <CardContent className="p-0">
+        <div className="flex items-start gap-2 sm:gap-3">
+          {/* Drag handle - desktop only */}
+          {canEdit && !isSpanningDay && (
             <div
               {...attributes}
               {...listeners}
-              className="cursor-grab active:cursor-grabbing touch-none"
+              className="cursor-grab active:cursor-grabbing touch-none hidden sm:block pt-1"
             >
-              <GripVertical className="h-5 w-5 text-ink-light shrink-0 hidden sm:block hover:text-ink" />
+              <GripVertical className="h-5 w-5 text-ink-light hover:text-ink shrink-0" />
             </div>
           )}
-          <div className={cn("rounded-full p-2 shrink-0", ITEM_COLORS[item.type])}>
+
+          {/* Icon */}
+          <div className={cn("rounded-full p-1.5 sm:p-2 shrink-0 mt-0.5", ITEM_COLORS[item.type])}>
             {ITEM_ICONS[item.type]}
           </div>
+
+          {/* Content */}
           <div className="flex-1 min-w-0">
-            <h4 className="font-medium truncate">{item.title}</h4>
-            {item.location && (
-              <p className="text-sm text-ink-light truncate">{item.location}</p>
-            )}
-          </div>
-          <div className="text-right sm:hidden">
-            <p className="text-sm">
-              {new Date(item.start_time).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-1">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm">
-              {new Date(item.start_time).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
-            {item.price && (
-              <p className="text-sm text-ink-light">
-                {item.currency || '$'}{item.price}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-1">
-            {item.booking_confirmed && (
-              <span className="flex items-center gap-1 text-xs sm:text-sm text-green-600 mr-1 sm:mr-2">
-                <Check className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Booked</span>
-              </span>
-            )}
-            {canEdit && (
-              <>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                    >
-                      <CalendarDays className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuLabel>Move to day</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {tripDays.map((day) => (
-                      <DropdownMenuItem
-                        key={day.dateString}
-                        disabled={day.dateString === currentDateString}
-                        onClick={() => onMoveToDate(item.id, day.dateString)}
-                        className={cn(
-                          day.dateString === currentDateString && "opacity-50"
-                        )}
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h4 className="font-medium text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">{item.title}</h4>
+                  {item.booking_confirmed && (
+                    <Check className="h-3.5 w-3.5 text-green-600 shrink-0" />
+                  )}
+                  {multiDayLabel && (
+                    <span className="text-xs bg-sand-dark text-ink-light px-1 py-0.5 rounded shrink-0">
+                      {multiDayLabel}
+                    </span>
+                  )}
+                </div>
+                {item.location && (
+                  <p className="text-xs sm:text-sm text-ink-light truncate">{item.location}</p>
+                )}
+                {/* Mobile: show time and price inline */}
+                <div className="flex items-center gap-2 mt-1 sm:hidden text-xs text-ink-light">
+                  <span>
+                    {new Date(item.start_time).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                  {item.price && !isSpanningDay && (
+                    <span>${item.price}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Desktop: time and price */}
+              <div className="text-right hidden sm:block shrink-0">
+                {!isSpanningDay && (
+                  <p className="text-sm">
+                    {new Date(item.start_time).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                )}
+                {item.price && !isSpanningDay && (
+                  <p className="text-sm text-ink-light">
+                    {item.currency || '$'}{item.price}
+                  </p>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              {canEdit && (
+                <div className="flex items-center gap-0.5 shrink-0">
+                  {/* Move to day - hidden on mobile */}
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hidden sm:flex h-7 w-7 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                       >
-                        <span className="truncate">
-                          {day.date.getMonth() + 1}/{day.date.getDate()}/{day.date.getFullYear()}
-                        </span>
-                        {day.dateString === currentDateString && (
-                          <Check className="h-4 w-4 ml-auto" />
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onEditItem(item)}
-                  className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onDeleteItem(item.id)}
-                  className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-ink-light hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </>
-            )}
+                        <CalendarDays className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuLabel>Move to day</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {tripDays.map((day) => (
+                        <DropdownMenuItem
+                          key={day.dateString}
+                          disabled={day.dateString === currentDateString}
+                          onSelect={() => onMoveToDate(item.id, day.dateString)}
+                          className={cn(
+                            day.dateString === currentDateString && "opacity-50"
+                          )}
+                        >
+                          <span className="truncate">
+                            {day.date.getMonth() + 1}/{day.date.getDate()}/{day.date.getFullYear()}
+                          </span>
+                          {day.dateString === currentDateString && (
+                            <Check className="h-4 w-4 ml-auto" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEditItem(item)}
+                    className="h-7 w-7 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDeleteItem(item.id)}
+                    className="h-7 w-7 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-ink-light hover:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
@@ -257,18 +315,41 @@ export function ItineraryTab({
 
   // Generate all days between trip start and end dates
   const tripDays = useMemo((): DayData[] => {
-    const start = new Date(trip.start_date)
-    const end = new Date(trip.end_date)
+    // Parse dates in local timezone by appending T00:00:00
+    const startStr = trip.start_date.split('T')[0]
+    const endStr = trip.end_date.split('T')[0]
+    const start = new Date(startStr + 'T00:00:00')
+    const end = new Date(endStr + 'T00:00:00')
     const days: DayData[] = []
 
     const current = new Date(start)
     let dayNumber = 1
 
     while (current <= end) {
-      const dateString = current.toISOString().split('T')[0]
+      // Use local date string for comparison
+      const year = current.getFullYear()
+      const month = String(current.getMonth() + 1).padStart(2, '0')
+      const day = String(current.getDate()).padStart(2, '0')
+      const dateString = `${year}-${month}-${day}`
+
       const dayItems = localItems.filter(item => {
-        const itemDate = new Date(item.start_time).toISOString().split('T')[0]
-        return itemDate === dateString
+        // Parse item date in local timezone for comparison
+        const itemStartDateStr = item.start_time.split('T')[0]
+        const itemEndDateStr = item.end_time ? item.end_time.split('T')[0] : itemStartDateStr
+
+        // Item appears on this day if:
+        // 1. It starts on this day, OR
+        // 2. It's a multi-day item that spans this day (start <= day <= end)
+        if (itemStartDateStr === dateString) {
+          return true
+        }
+
+        // Check if this is a multi-day item spanning this date
+        if (itemEndDateStr > itemStartDateStr) {
+          return dateString >= itemStartDateStr && dateString <= itemEndDateStr
+        }
+
+        return false
       })
 
       days.push({
@@ -381,7 +462,7 @@ export function ItineraryTab({
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
+    <div className="flex flex-col lg:flex-row gap-6 w-full max-w-full overflow-x-hidden">
       {/* Sidebar Navigation - Hidden on mobile, shown on larger screens */}
       <aside className="hidden lg:block w-48 shrink-0">
         <div className="sticky top-6">
@@ -420,34 +501,71 @@ export function ItineraryTab({
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 w-full max-w-full overflow-x-hidden">
         {/* Header with actions */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-xl font-serif text-ink">Itinerary</h2>
+        <div className="mb-4 sm:mb-6 flex items-center justify-between gap-2">
+          <h2 className="text-lg sm:text-xl font-serif text-ink shrink-0">Itinerary</h2>
           {canEdit && (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onImport}
-                className="gap-1"
-              >
-                <Mail className="h-3 w-3" />
-                Import
-              </Button>
-              {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
+            <>
+              {/* Mobile: Compact dropdown for add actions */}
+              <div className="flex gap-1.5 sm:hidden shrink-0">
                 <Button
-                  key={type}
                   variant="outline"
                   size="sm"
-                  onClick={() => onAddItem(type)}
+                  onClick={onImport}
+                  className="h-8 w-8 p-0"
+                >
+                  <Mail className="h-4 w-4" />
+                  <span className="sr-only">Import</span>
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" className="h-8 gap-1 px-2">
+                      <Plus className="h-4 w-4" />
+                      <span>Add</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40" sideOffset={4}>
+                    {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
+                      <DropdownMenuItem
+                        key={type}
+                        onSelect={() => onAddItem(type)}
+                      >
+                        <span className="flex items-center gap-2">
+                          {ITEM_ICONS[type]}
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Desktop: Full button row */}
+              <div className="hidden sm:flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onImport}
                   className="gap-1"
                 >
-                  <Plus className="h-3 w-3" />
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                  <Mail className="h-3 w-3" />
+                  Import
                 </Button>
-              ))}
-            </div>
+                {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
+                  <Button
+                    key={type}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onAddItem(type)}
+                    className="gap-1"
+                  >
+                    <Plus className="h-3 w-3" />
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </Button>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
