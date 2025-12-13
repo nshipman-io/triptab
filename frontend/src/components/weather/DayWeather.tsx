@@ -1,15 +1,38 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Cloud, Sun, CloudRain, CloudSnow, CloudLightning, Wind, Droplets,
   Thermometer, Eye, Sunrise, Sunset, AlertTriangle, ChevronDown, ChevronUp
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { WeatherDay, WeatherAlert } from '@/types'
+import {
+  getUnitPreferences,
+  celsiusToFahrenheit,
+  type TempUnit,
+  type SpeedUnit
+} from './WeatherSummary'
 
 interface DayWeatherProps {
   weather: WeatherDay
   alerts: WeatherAlert[]
   defaultExpanded?: boolean
+}
+
+// Convert km/h to mph
+function kmhToMph(kmh: number): number {
+  return kmh * 0.621371
+}
+
+function formatTemp(tempC: number | null, unit: TempUnit): string {
+  if (tempC === null) return '--'
+  const temp = unit === 'F' ? celsiusToFahrenheit(tempC) : tempC
+  return `${Math.round(temp)}°`
+}
+
+function formatSpeed(speedKmh: number | null, unit: SpeedUnit): string {
+  if (speedKmh === null) return '--'
+  const speed = unit === 'mph' ? kmhToMph(speedKmh) : speedKmh
+  return `${Math.round(speed)} ${unit === 'mph' ? 'mph' : 'km/h'}`
 }
 
 // Map OpenWeatherMap condition codes to icons
@@ -58,6 +81,27 @@ function getAqiColor(aqi: number | null): string {
 
 export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeatherProps) {
   const [expanded, setExpanded] = useState(defaultExpanded)
+  const [units, setUnits] = useState<{ temp: TempUnit; speed: SpeedUnit }>({ temp: 'C', speed: 'kmh' })
+
+  // Listen for unit preference changes
+  useEffect(() => {
+    const loadUnits = () => setUnits(getUnitPreferences())
+    loadUnits()
+
+    // Re-check on storage change (when user toggles in WeatherSummary)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'weatherUnits') loadUnits()
+    }
+    window.addEventListener('storage', handleStorage)
+
+    // Also poll for changes since storage event doesn't fire in same tab
+    const interval = setInterval(loadUnits, 1000)
+
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      clearInterval(interval)
+    }
+  }, [])
 
   if (!weather.available) {
     return (
@@ -83,10 +127,10 @@ export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeat
           <div className="flex items-center gap-2">
             {getWeatherIcon(weather.condition)}
             <span className="font-medium">
-              {weather.temp_high !== null ? `${Math.round(weather.temp_high)}°` : '--'}
+              {formatTemp(weather.temp_high, units.temp)}
               {weather.feels_like_high !== null && weather.temp_high !== null && (
                 <span className="text-ink-light text-sm ml-1">
-                  (feels {Math.round(weather.feels_like_high)}°)
+                  (feels {formatTemp(weather.feels_like_high, units.temp)})
                 </span>
               )}
             </span>
@@ -108,7 +152,7 @@ export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeat
             {weather.wind_speed !== null && (
               <span className="flex items-center gap-1">
                 <Wind className="h-3 w-3" />
-                {Math.round(weather.wind_speed)} km/h
+                {formatSpeed(weather.wind_speed, units.speed)}
               </span>
             )}
           </div>
@@ -117,7 +161,7 @@ export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeat
         <div className="flex items-center gap-2">
           {/* Low temp */}
           <span className="text-sm text-ink-light">
-            {weather.temp_low !== null ? `↓${Math.round(weather.temp_low)}°` : ''}
+            {weather.temp_low !== null ? `↓${formatTemp(weather.temp_low, units.temp)}` : ''}
           </span>
 
           {/* Alert indicator */}
@@ -149,7 +193,7 @@ export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeat
                 <p className="text-xs text-ink-light">Temp</p>
                 <p className="font-medium">
                   {weather.temp_low !== null && weather.temp_high !== null
-                    ? `${Math.round(weather.temp_low)}° - ${Math.round(weather.temp_high)}°`
+                    ? `${formatTemp(weather.temp_low, units.temp)} - ${formatTemp(weather.temp_high, units.temp)}`
                     : '--'
                   }
                 </p>
@@ -176,10 +220,7 @@ export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeat
               <div>
                 <p className="text-xs text-ink-light">Wind</p>
                 <p className="font-medium">
-                  {weather.wind_speed !== null
-                    ? `${Math.round(weather.wind_speed)} km/h`
-                    : '--'
-                  }
+                  {formatSpeed(weather.wind_speed, units.speed)}
                 </p>
               </div>
             </div>
@@ -223,7 +264,12 @@ export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeat
                 <Eye className="h-4 w-4 text-gray-400" />
                 <div>
                   <p className="text-xs text-ink-light">Visibility</p>
-                  <p className="font-medium">{weather.visibility_km.toFixed(1)} km</p>
+                  <p className="font-medium">
+                    {units.speed === 'mph'
+                      ? `${(weather.visibility_km * 0.621371).toFixed(1)} mi`
+                      : `${weather.visibility_km.toFixed(1)} km`
+                    }
+                  </p>
                 </div>
               </div>
             )}

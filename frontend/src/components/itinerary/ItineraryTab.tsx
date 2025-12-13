@@ -546,29 +546,38 @@ export function ItineraryTab({
                 </DropdownMenu>
               </div>
 
-              {/* Desktop: Full button row */}
-              <div className="hidden sm:flex flex-wrap gap-2">
+              {/* Desktop: Import + Add dropdown */}
+              <div className="hidden sm:flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={onImport}
-                  className="gap-1"
+                  className="gap-1.5"
                 >
-                  <Mail className="h-3 w-3" />
+                  <Mail className="h-4 w-4" />
                   Import
                 </Button>
-                {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
-                  <Button
-                    key={type}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onAddItem(type)}
-                    className="gap-1"
-                  >
-                    <Plus className="h-3 w-3" />
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </Button>
-                ))}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" className="gap-1.5">
+                      <Plus className="h-4 w-4" />
+                      Add
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
+                      <DropdownMenuItem
+                        key={type}
+                        onSelect={() => onAddItem(type)}
+                      >
+                        <span className="flex items-center gap-2">
+                          {ITEM_ICONS[type]}
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </>
           )}

@@ -452,7 +452,7 @@ export function TripDetail() {
         <div className="grid gap-6 lg:gap-8 lg:grid-cols-3 w-full overflow-hidden">
           {/* Main Content - Tabs */}
           <div className="lg:col-span-2 min-w-0 overflow-hidden">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs id="trip-tabs" value={activeTab} onValueChange={setActiveTab} className="w-full">
               {/* Desktop tabs */}
               <TabsList className="mb-6 w-full hidden lg:grid lg:grid-cols-4">
                 <TabsTrigger value="itinerary" className="gap-2 text-sm px-3">
@@ -732,7 +732,12 @@ export function TripDetail() {
                     destination={trip.destination}
                     startDate={trip.start_date}
                     endDate={trip.end_date}
-                    onViewDetails={() => setActiveTab('itinerary')}
+                    onViewDetails={() => {
+                      setActiveTab('itinerary')
+                      setTimeout(() => {
+                        document.getElementById('trip-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }, 100)
+                    }}
                   />
 
                   {/* Trip Details */}
@@ -891,7 +896,12 @@ export function TripDetail() {
               destination={trip.destination}
               startDate={trip.start_date}
               endDate={trip.end_date}
-              onViewDetails={() => setActiveTab('itinerary')}
+              onViewDetails={() => {
+                setActiveTab('itinerary')
+                setTimeout(() => {
+                  document.getElementById('trip-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }, 100)
+              }}
             />
 
             {/* Book Travel */}

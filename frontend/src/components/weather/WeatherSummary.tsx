@@ -8,12 +8,51 @@ import {
 import { api } from '@/lib/api'
 import type { WeatherResponse, WeatherAlert } from '@/types'
 
+type TempUnit = 'C' | 'F'
+type SpeedUnit = 'kmh' | 'mph'
+
 interface WeatherSummaryProps {
   tripId: string
   destination: string
   startDate: string
   endDate: string
   onViewDetails?: () => void
+}
+
+// Unit conversion functions
+function celsiusToFahrenheit(celsius: number): number {
+  return (celsius * 9/5) + 32
+}
+
+function formatTemp(tempC: number | null, unit: TempUnit): string {
+  if (tempC === null) return '--'
+  const temp = unit === 'F' ? celsiusToFahrenheit(tempC) : tempC
+  return `${Math.round(temp)}°${unit}`
+}
+
+function formatTempRange(lowC: number | null, highC: number | null, unit: TempUnit): string {
+  if (lowC === null || highC === null) return '--'
+  const low = unit === 'F' ? celsiusToFahrenheit(lowC) : lowC
+  const high = unit === 'F' ? celsiusToFahrenheit(highC) : highC
+  return `${Math.round(low)}° - ${Math.round(high)}°${unit}`
+}
+
+// Get/set unit preferences from localStorage
+function getUnitPreferences(): { temp: TempUnit; speed: SpeedUnit } {
+  if (typeof window === 'undefined') return { temp: 'C', speed: 'kmh' }
+  const stored = localStorage.getItem('weatherUnits')
+  if (stored) {
+    try {
+      return JSON.parse(stored)
+    } catch {
+      return { temp: 'C', speed: 'kmh' }
+    }
+  }
+  return { temp: 'C', speed: 'kmh' }
+}
+
+function saveUnitPreferences(prefs: { temp: TempUnit; speed: SpeedUnit }) {
+  localStorage.setItem('weatherUnits', JSON.stringify(prefs))
 }
 
 // Map OpenWeatherMap condition codes to icons
@@ -65,6 +104,15 @@ function formatDateRange(startDate: string, endDate: string): string {
   return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`
 }
 
+function formatLocalTime(utcDateString: string): string {
+  const date = new Date(utcDateString)
+  return date.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  })
+}
+
 export function WeatherSummary({
   tripId,
   destination,
@@ -76,6 +124,13 @@ export function WeatherSummary({
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [units, setUnits] = useState<{ temp: TempUnit; speed: SpeedUnit }>(getUnitPreferences)
+
+  const toggleTempUnit = () => {
+    const newUnits = { ...units, temp: units.temp === 'C' ? 'F' as TempUnit : 'C' as TempUnit }
+    setUnits(newUnits)
+    saveUnitPreferences(newUnits)
+  }
 
   const fetchWeather = async (refresh = false) => {
     try {
@@ -167,15 +222,26 @@ export function WeatherSummary({
             {getWeatherIcon(summary.dominant_condition, summary.dominant_condition_icon)}
             Weather
           </CardTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => fetchWeather(true)}
-            disabled={refreshing}
-            className="h-8 w-8"
-          >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTempUnit}
+              className="h-7 px-2 text-xs font-medium"
+              title="Toggle temperature unit"
+            >
+              °{units.temp}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => fetchWeather(true)}
+              disabled={refreshing}
+              className="h-7 w-7"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4 p-0">
@@ -190,7 +256,7 @@ export function WeatherSummary({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-2xl font-medium">
-                {Math.round(summary.temp_range_low)}° - {Math.round(summary.temp_range_high)}°C
+                {formatTempRange(summary.temp_range_low, summary.temp_range_high, units.temp)}
               </p>
               <p className="text-sm text-ink-light">(temperature range)</p>
             </div>
@@ -236,13 +302,17 @@ export function WeatherSummary({
           </Button>
         )}
 
-        {/* Last updated */}
+        {/* Last updated - local time */}
         {weather.last_updated && (
           <p className="text-xs text-ink-light text-center">
-            Updated {new Date(weather.last_updated).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+            Updated {formatLocalTime(weather.last_updated)}
           </p>
         )}
       </CardContent>
     </Card>
   )
 }
+
+// Export unit helpers for use in DayWeather
+export { getUnitPreferences, saveUnitPreferences, formatTemp, celsiusToFahrenheit }
+export type { TempUnit, SpeedUnit }
