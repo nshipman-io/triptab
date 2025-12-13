@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Cloud, Sun, CloudRain, CloudSnow, CloudLightning, Wind, Droplets,
   Thermometer, Eye, Sunrise, Sunset, AlertTriangle, ChevronDown, ChevronUp
@@ -6,33 +6,17 @@ import {
 import { Button } from '@/components/ui/button'
 import type { WeatherDay, WeatherAlert } from '@/types'
 import {
-  getUnitPreferences,
-  celsiusToFahrenheit,
-  type TempUnit,
-  type SpeedUnit
-} from './WeatherSummary'
+  useUserPreferences,
+  formatTemperature,
+  formatSpeed,
+  formatDistance,
+  formatTimeOnly,
+} from '@/contexts/UserPreferencesContext'
 
 interface DayWeatherProps {
   weather: WeatherDay
   alerts: WeatherAlert[]
   defaultExpanded?: boolean
-}
-
-// Convert km/h to mph
-function kmhToMph(kmh: number): number {
-  return kmh * 0.621371
-}
-
-function formatTemp(tempC: number | null, unit: TempUnit): string {
-  if (tempC === null) return '--'
-  const temp = unit === 'F' ? celsiusToFahrenheit(tempC) : tempC
-  return `${Math.round(temp)}°`
-}
-
-function formatSpeed(speedKmh: number | null, unit: SpeedUnit): string {
-  if (speedKmh === null) return '--'
-  const speed = unit === 'mph' ? kmhToMph(speedKmh) : speedKmh
-  return `${Math.round(speed)} ${unit === 'mph' ? 'mph' : 'km/h'}`
 }
 
 // Map OpenWeatherMap condition codes to icons
@@ -81,27 +65,7 @@ function getAqiColor(aqi: number | null): string {
 
 export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeatherProps) {
   const [expanded, setExpanded] = useState(defaultExpanded)
-  const [units, setUnits] = useState<{ temp: TempUnit; speed: SpeedUnit }>({ temp: 'C', speed: 'kmh' })
-
-  // Listen for unit preference changes
-  useEffect(() => {
-    const loadUnits = () => setUnits(getUnitPreferences())
-    loadUnits()
-
-    // Re-check on storage change (when user toggles in WeatherSummary)
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'weatherUnits') loadUnits()
-    }
-    window.addEventListener('storage', handleStorage)
-
-    // Also poll for changes since storage event doesn't fire in same tab
-    const interval = setInterval(loadUnits, 1000)
-
-    return () => {
-      window.removeEventListener('storage', handleStorage)
-      clearInterval(interval)
-    }
-  }, [])
+  const { preferences } = useUserPreferences()
 
   if (!weather.available) {
     return (
@@ -127,10 +91,10 @@ export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeat
           <div className="flex items-center gap-2">
             {getWeatherIcon(weather.condition)}
             <span className="font-medium">
-              {formatTemp(weather.temp_high, units.temp)}
+              {formatTemperature(weather.temp_high, preferences.temperatureUnit)}
               {weather.feels_like_high !== null && weather.temp_high !== null && (
                 <span className="text-ink-light text-sm ml-1">
-                  (feels {formatTemp(weather.feels_like_high, units.temp)})
+                  (feels {formatTemperature(weather.feels_like_high, preferences.temperatureUnit)})
                 </span>
               )}
             </span>
@@ -152,7 +116,7 @@ export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeat
             {weather.wind_speed !== null && (
               <span className="flex items-center gap-1">
                 <Wind className="h-3 w-3" />
-                {formatSpeed(weather.wind_speed, units.speed)}
+                {formatSpeed(weather.wind_speed, preferences.speedUnit)}
               </span>
             )}
           </div>
@@ -161,7 +125,7 @@ export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeat
         <div className="flex items-center gap-2">
           {/* Low temp */}
           <span className="text-sm text-ink-light">
-            {weather.temp_low !== null ? `↓${formatTemp(weather.temp_low, units.temp)}` : ''}
+            {weather.temp_low !== null ? `↓${formatTemperature(weather.temp_low, preferences.temperatureUnit)}` : ''}
           </span>
 
           {/* Alert indicator */}
@@ -193,7 +157,7 @@ export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeat
                 <p className="text-xs text-ink-light">Temp</p>
                 <p className="font-medium">
                   {weather.temp_low !== null && weather.temp_high !== null
-                    ? `${formatTemp(weather.temp_low, units.temp)} - ${formatTemp(weather.temp_high, units.temp)}`
+                    ? `${formatTemperature(weather.temp_low, preferences.temperatureUnit, false)} - ${formatTemperature(weather.temp_high, preferences.temperatureUnit)}`
                     : '--'
                   }
                 </p>
@@ -220,7 +184,7 @@ export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeat
               <div>
                 <p className="text-xs text-ink-light">Wind</p>
                 <p className="font-medium">
-                  {formatSpeed(weather.wind_speed, units.speed)}
+                  {formatSpeed(weather.wind_speed, preferences.speedUnit)}
                 </p>
               </div>
             </div>
@@ -265,10 +229,7 @@ export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeat
                 <div>
                   <p className="text-xs text-ink-light">Visibility</p>
                   <p className="font-medium">
-                    {units.speed === 'mph'
-                      ? `${(weather.visibility_km * 0.621371).toFixed(1)} mi`
-                      : `${weather.visibility_km.toFixed(1)} km`
-                    }
+                    {formatDistance(weather.visibility_km, preferences.distanceUnit)}
                   </p>
                 </div>
               </div>
@@ -284,7 +245,7 @@ export function DayWeather({ weather, alerts, defaultExpanded = false }: DayWeat
                 <div>
                   <p className="text-xs text-ink-light">Sun</p>
                   <p className="font-medium text-xs">
-                    {weather.sunrise.substring(0, 5)} - {weather.sunset.substring(0, 5)}
+                    {formatTimeOnly(weather.sunrise, preferences.timeFormat)} - {formatTimeOnly(weather.sunset, preferences.timeFormat)}
                   </p>
                 </div>
               </div>

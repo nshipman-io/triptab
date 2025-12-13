@@ -732,12 +732,6 @@ export function TripDetail() {
                     destination={trip.destination}
                     startDate={trip.start_date}
                     endDate={trip.end_date}
-                    onViewDetails={() => {
-                      setActiveTab('itinerary')
-                      setTimeout(() => {
-                        document.getElementById('trip-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                      }, 100)
-                    }}
                   />
 
                   {/* Trip Details */}
@@ -896,12 +890,6 @@ export function TripDetail() {
               destination={trip.destination}
               startDate={trip.start_date}
               endDate={trip.end_date}
-              onViewDetails={() => {
-                setActiveTab('itinerary')
-                setTimeout(() => {
-                  document.getElementById('trip-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                }, 100)
-              }}
             />
 
             {/* Book Travel */}

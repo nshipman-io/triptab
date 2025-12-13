@@ -3,7 +3,14 @@ import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { MapPin, Eye, Search, LogOut, User, Menu, X, BookOpen, Plus } from 'lucide-react'
+import { MapPin, Eye, Search, LogOut, User, Menu, X, BookOpen, Plus, Settings, ChevronDown } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { api } from '@/lib/api'
 import type { GuideSummary, User as UserType } from '@/types'
 
@@ -77,13 +84,33 @@ export function Guides() {
               <Link to="/guides" className="text-terracotta text-sm font-medium">
                 Guides
               </Link>
-              <div className="flex items-center gap-2 rounded-full bg-cream px-3 py-1.5 shadow-sm">
-                <User className="h-4 w-4 text-ink-light" />
-                <span className="text-sm font-medium">{user.name}</span>
-              </div>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 rounded-full bg-cream px-3 py-1.5 shadow-sm hover:bg-sand transition-colors cursor-pointer">
+                    <User className="h-4 w-4 text-ink-light" />
+                    <span className="text-sm font-medium">{user.name}</span>
+                    <ChevronDown className="h-3 w-3 text-ink-light" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
+                      My Trips
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600">
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>
@@ -143,9 +170,17 @@ export function Guides() {
                 >
                   Guides
                 </Link>
+                <Link
+                  to="/settings"
+                  className="flex items-center gap-2 px-3 py-2 text-ink hover:bg-sand rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </Link>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-ink-light hover:bg-sand rounded-lg transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-2 text-red-600 hover:bg-sand rounded-lg transition-colors"
                 >
                   <LogOut className="h-4 w-4" />
                   Log out
