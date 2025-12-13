@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     # Google Places API (for recommendation validation)
     GOOGLE_PLACES_API_KEY: str = ""
 
+    # OpenWeatherMap API (for weather forecasts)
+    OPENWEATHERMAP_API_KEY: str = ""
+    WEATHER_CACHE_TTL_HOURS: int = 6
+    WEATHER_ENABLED: bool = True
+
     # Admin user (created on startup if password is set)
     ADMIN_EMAIL: str = "support@triptab.io"
     ADMIN_PASSWORD: str = ""  # Set via ADMIN_PASSWORD env var

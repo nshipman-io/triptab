@@ -32,10 +32,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
-import type { Trip, ItineraryItem, ItineraryItemType } from '@/types'
+import type { Trip, ItineraryItem, ItineraryItemType, WeatherDay, WeatherAlert } from '@/types'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { toast } from 'sonner'
+import { DayWeather } from '@/components/weather/DayWeather'
 
 const ITEM_ICONS: Record<ItineraryItemType, React.ReactNode> = {
   flight: <Plane className="h-4 w-4" />,
@@ -73,6 +74,8 @@ interface ItineraryTabProps {
   showItemForm: boolean
   itemFormContent: React.ReactNode
   onItemsReordered?: (items: ItineraryItem[]) => void
+  weatherDaily?: WeatherDay[]
+  weatherAlerts?: WeatherAlert[]
 }
 
 // Helper to check if an item is multi-day
@@ -293,6 +296,8 @@ export function ItineraryTab({
   showItemForm,
   itemFormContent,
   onItemsReordered,
+  weatherDaily = [],
+  weatherAlerts = [],
 }: ItineraryTabProps) {
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set())
   const [localItems, setLocalItems] = useState<ItineraryItem[]>(items)
@@ -541,29 +546,38 @@ export function ItineraryTab({
                 </DropdownMenu>
               </div>
 
-              {/* Desktop: Full button row */}
-              <div className="hidden sm:flex flex-wrap gap-2">
+              {/* Desktop: Import + Add dropdown */}
+              <div className="hidden sm:flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={onImport}
-                  className="gap-1"
+                  className="gap-1.5"
                 >
-                  <Mail className="h-3 w-3" />
+                  <Mail className="h-4 w-4" />
                   Import
                 </Button>
-                {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
-                  <Button
-                    key={type}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onAddItem(type)}
-                    className="gap-1"
-                  >
-                    <Plus className="h-3 w-3" />
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </Button>
-                ))}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" className="gap-1.5">
+                      <Plus className="h-4 w-4" />
+                      Add
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    {(Object.keys(ITEM_ICONS) as ItineraryItemType[]).map((type) => (
+                      <DropdownMenuItem
+                        key={type}
+                        onSelect={() => onAddItem(type)}
+                      >
+                        <span className="flex items-center gap-2">
+                          {ITEM_ICONS[type]}
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </>
           )}
@@ -620,7 +634,23 @@ export function ItineraryTab({
                     </button>
                   </CollapsibleTrigger>
 
-                  <CollapsibleContent className="space-y-2 pt-2">
+                  <CollapsibleContent className="space-y-3 pt-2">
+                    {/* Day Weather */}
+                    {weatherDaily.length > 0 && (() => {
+                      const dayWeather = weatherDaily.find(w => w.date === day.dateString)
+                      const dayAlerts = weatherAlerts.filter(a => a.date === day.dateString)
+                      if (dayWeather) {
+                        return (
+                          <DayWeather
+                            weather={dayWeather}
+                            alerts={dayAlerts}
+                            defaultExpanded={dayAlerts.length > 0}
+                          />
+                        )
+                      }
+                      return null
+                    })()}
+
                     {day.items.length === 0 ? (
                       <div className="py-4 text-center text-sm text-ink-light">
                         No activities planned for this day

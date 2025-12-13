@@ -11,7 +11,7 @@ import {
   ListTodo, DollarSign, Pencil, Trash2, X
 } from 'lucide-react'
 import { api } from '@/lib/api'
-import type { Trip, ItineraryItem, TripMember, ItineraryItemType, TripPreferences, User } from '@/types'
+import type { Trip, ItineraryItem, TripMember, ItineraryItemType, TripPreferences, User, WeatherResponse } from '@/types'
 import {
   getFlightSearchLinks,
   getHotelSearchLinks,
@@ -29,6 +29,7 @@ import { ItineraryItemForm } from '@/components/itinerary/ItineraryItemForm'
 import { ItineraryTab } from '@/components/itinerary/ItineraryTab'
 import { TripPreferencesEditor } from '@/components/trip/TripPreferencesEditor'
 import { MemberManagement } from '@/components/trip/MemberManagement'
+import { WeatherSummary } from '@/components/weather/WeatherSummary'
 
 // Helper to format date for input[type="date"]
 function formatDateForInput(dateStr: string): string {
@@ -47,6 +48,7 @@ export function TripDetail() {
   const [copied, setCopied] = useState(false)
   const [activeTab, setActiveTab] = useState('itinerary')
   const [showImportDialog, setShowImportDialog] = useState(false)
+  const [weather, setWeather] = useState<WeatherResponse | null>(null)
 
   // Edit trip name state
   const [isEditingName, setIsEditingName] = useState(false)
@@ -103,6 +105,13 @@ export function TripDetail() {
         setSearchReturnDate(formatDateForInput(loadedTrip.end_date))
         setSearchTravelersInput(String(loadedTrip.preferences.num_travelers || 1))
         setSearchDestination(loadedTrip.destination)
+
+        // Fetch weather data (non-blocking)
+        api.getTripWeather(id).then((weatherData) => {
+          setWeather(weatherData as WeatherResponse)
+        }).catch((err) => {
+          console.log('Weather not available:', err)
+        })
       } catch (error) {
         console.error('Failed to load trip:', error)
       } finally {
@@ -443,7 +452,7 @@ export function TripDetail() {
         <div className="grid gap-6 lg:gap-8 lg:grid-cols-3 w-full overflow-hidden">
           {/* Main Content - Tabs */}
           <div className="lg:col-span-2 min-w-0 overflow-hidden">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs id="trip-tabs" value={activeTab} onValueChange={setActiveTab} className="w-full">
               {/* Desktop tabs */}
               <TabsList className="mb-6 w-full hidden lg:grid lg:grid-cols-4">
                 <TabsTrigger value="itinerary" className="gap-2 text-sm px-3">
@@ -506,6 +515,8 @@ export function TripDetail() {
                       onCancel={handleCancelItemForm}
                     />
                   }
+                  weatherDaily={weather?.daily || []}
+                  weatherAlerts={weather?.alerts || []}
                 />
               </TabsContent>
 
@@ -715,6 +726,14 @@ export function TripDetail() {
               {/* Mobile-only Info Tab */}
               <TabsContent value="info" className="lg:hidden">
                 <div className="space-y-4">
+                  {/* Weather Summary - Mobile */}
+                  <WeatherSummary
+                    tripId={id!}
+                    destination={trip.destination}
+                    startDate={trip.start_date}
+                    endDate={trip.end_date}
+                  />
+
                   {/* Trip Details */}
                   <Card className="p-4">
                     <CardHeader className="p-0 mb-3">
@@ -865,6 +884,14 @@ export function TripDetail() {
 
           {/* Sidebar - Desktop only */}
           <div className="hidden lg:block space-y-6">
+            {/* Weather Summary */}
+            <WeatherSummary
+              tripId={id!}
+              destination={trip.destination}
+              startDate={trip.start_date}
+              endDate={trip.end_date}
+            />
+
             {/* Book Travel */}
             <Card className="bg-sand p-6">
               <CardHeader className="p-0 mb-4">

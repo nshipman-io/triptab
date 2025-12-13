@@ -10,6 +10,13 @@
     app_dir: /opt/triptab
 
   tasks:
+    - name: Copy .env.prod file
+      copy:
+        src: ../../.env.prod
+        dest: "{{ app_dir }}/.env"
+        mode: '0600'
+      register: env_file
+
     - name: Copy docker-compose.prod.yml
       copy:
         src: ../../../docker-compose.prod.yml
@@ -27,6 +34,12 @@
       command: docker compose pull
       args:
         chdir: "{{ app_dir }}"
+
+    - name: Restart backend if env changed
+      command: docker compose restart backend
+      args:
+        chdir: "{{ app_dir }}"
+      when: env_file.changed
 
     - name: Start services
       command: docker compose up -d

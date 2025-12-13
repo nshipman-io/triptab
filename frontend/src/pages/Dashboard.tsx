@@ -2,7 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Calendar, Users, MapPin, LogOut, Plane } from 'lucide-react'
+import { Plus, Calendar, Users, MapPin, LogOut, Plane, Settings, ChevronDown } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { api } from '@/lib/api'
 import type { Trip, User } from '@/types'
 
@@ -62,14 +69,29 @@ export function Dashboard() {
             <Link to="/guides" className="text-ink-light text-sm font-medium hover:text-terracotta transition-colors">
               Guides
             </Link>
-            <div className="flex items-center gap-2 rounded-full bg-sand px-3 py-1.5">
-              <span className="text-sm font-medium text-ink truncate max-w-24 md:max-w-none">
-                {user?.name}
-              </span>
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 rounded-full bg-sand px-3 py-1.5 hover:bg-sand-dark transition-colors cursor-pointer">
+                  <span className="text-sm font-medium text-ink truncate max-w-24 md:max-w-none">
+                    {user?.name}
+                  </span>
+                  <ChevronDown className="h-3 w-3 text-ink-light" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
+                    <Settings className="h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600">
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

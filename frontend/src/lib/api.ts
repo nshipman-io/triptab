@@ -458,6 +458,25 @@ class ApiClient {
       body: JSON.stringify({ is_admin: isAdmin }),
     })
   }
+
+  async getAdminApiUsage(days: number = 7) {
+    return this.request(`/admin/api-usage?days=${days}`)
+  }
+
+  // Weather endpoints
+  async getTripWeather(tripId: string) {
+    return this.request(`/trips/${tripId}/weather`)
+  }
+
+  async refreshTripWeather(tripId: string) {
+    return this.request(`/trips/${tripId}/weather/refresh`, {
+      method: 'POST',
+    })
+  }
+
+  async getSharedTripWeather(shareCode: string) {
+    return this.request(`/trips/share/${shareCode}/weather`)
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL)
