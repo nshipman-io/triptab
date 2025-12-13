@@ -32,10 +32,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
-import type { Trip, ItineraryItem, ItineraryItemType } from '@/types'
+import type { Trip, ItineraryItem, ItineraryItemType, WeatherDay, WeatherAlert } from '@/types'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { toast } from 'sonner'
+import { DayWeather } from '@/components/weather/DayWeather'
 
 const ITEM_ICONS: Record<ItineraryItemType, React.ReactNode> = {
   flight: <Plane className="h-4 w-4" />,
@@ -73,6 +74,8 @@ interface ItineraryTabProps {
   showItemForm: boolean
   itemFormContent: React.ReactNode
   onItemsReordered?: (items: ItineraryItem[]) => void
+  weatherDaily?: WeatherDay[]
+  weatherAlerts?: WeatherAlert[]
 }
 
 // Helper to check if an item is multi-day
@@ -293,6 +296,8 @@ export function ItineraryTab({
   showItemForm,
   itemFormContent,
   onItemsReordered,
+  weatherDaily = [],
+  weatherAlerts = [],
 }: ItineraryTabProps) {
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set())
   const [localItems, setLocalItems] = useState<ItineraryItem[]>(items)
@@ -620,7 +625,23 @@ export function ItineraryTab({
                     </button>
                   </CollapsibleTrigger>
 
-                  <CollapsibleContent className="space-y-2 pt-2">
+                  <CollapsibleContent className="space-y-3 pt-2">
+                    {/* Day Weather */}
+                    {weatherDaily.length > 0 && (() => {
+                      const dayWeather = weatherDaily.find(w => w.date === day.dateString)
+                      const dayAlerts = weatherAlerts.filter(a => a.date === day.dateString)
+                      if (dayWeather) {
+                        return (
+                          <DayWeather
+                            weather={dayWeather}
+                            alerts={dayAlerts}
+                            defaultExpanded={dayAlerts.length > 0}
+                          />
+                        )
+                      }
+                      return null
+                    })()}
+
                     {day.items.length === 0 ? (
                       <div className="py-4 text-center text-sm text-ink-light">
                         No activities planned for this day

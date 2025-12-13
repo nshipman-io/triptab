@@ -5,6 +5,7 @@ from app.models.checklist import Checklist, ChecklistItem, ChecklistType
 from app.models.expense import Expense, ExpenseSplit, ExpenseCategory, SplitType
 from app.models.import_log import ImportLog, ImportSource, ImportStatus
 from app.models.guide import Guide, GuideSection, GuidePlace, GuideVisibility
+from app.models.weather import WeatherCache, ApiCallLog
 
 __all__ = [
     "User",
@@ -25,4 +26,6 @@ __all__ = [
     "GuideSection",
     "GuidePlace",
     "GuideVisibility",
+    "WeatherCache",
+    "ApiCallLog",
 ]

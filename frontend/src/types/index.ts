@@ -321,3 +321,51 @@ export interface GuideSummary {
   created_at: string
   updated_at: string
 }
+
+// Weather types
+export type WeatherAlertType = 'rain' | 'snow' | 'extreme_heat' | 'extreme_cold' | 'high_wind' | 'poor_aqi' | 'high_uv' | 'low_visibility'
+export type WeatherAlertSeverity = 'warning' | 'severe'
+
+export interface WeatherDay {
+  date: string
+  temp_high: number | null
+  temp_low: number | null
+  feels_like_high: number | null
+  feels_like_low: number | null
+  condition: string | null
+  condition_icon: string | null
+  precipitation_chance: number | null
+  precipitation_mm: number | null
+  humidity: number | null
+  wind_speed: number | null
+  wind_gust: number | null
+  uv_index: number | null
+  air_quality_index: number | null
+  visibility_km: number | null
+  sunrise: string | null
+  sunset: string | null
+  available: boolean
+}
+
+export interface WeatherAlert {
+  date: string
+  type: WeatherAlertType
+  severity: WeatherAlertSeverity
+  message: string
+}
+
+export interface WeatherSummary {
+  temp_range_low: number | null
+  temp_range_high: number | null
+  dominant_condition: string | null
+  dominant_condition_icon: string | null
+  alert_count: number
+  top_alerts: WeatherAlert[]
+}
+
+export interface WeatherResponse {
+  summary: WeatherSummary
+  daily: WeatherDay[]
+  alerts: WeatherAlert[]
+  last_updated: string | null
+}

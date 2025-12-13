@@ -9,6 +9,7 @@ from app.models.user import User
 from app.models.trip import Trip
 from app.models.guide import Guide, GuideVisibility
 from app.models.expense import Expense
+from app.models.weather import ApiCallLog
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -405,4 +406,156 @@ async def set_user_admin_status(
         email=user.email,
         name=user.name,
         is_admin=user.is_admin
+    )
+
+
+# --- API Usage Analytics ---
+
+class ApiServiceStats(BaseModel):
+    service: str
+    today_count: int
+    month_count: int
+    daily_limit: int | None
+    cache_hit_rate: float
+    avg_response_time_ms: float
+    error_rate: float
+
+
+class ApiDailyCall(BaseModel):
+    date: str
+    count: int
+    cache_hits: int
+
+
+class ApiUsageAnalytics(BaseModel):
+    services: list[ApiServiceStats]
+    daily_calls: list[ApiDailyCall]
+
+
+# Service limits (free tier)
+SERVICE_LIMITS = {
+    "openweathermap": 1000,  # per day
+    "google_places": None,  # varies by plan
+    "openai": None,  # varies by plan
+}
+
+
+@router.get("/api-usage", response_model=ApiUsageAnalytics)
+async def get_api_usage(
+    admin: AdminUser,
+    db: DbSession,
+    days: int = Query(7, ge=1, le=30)
+):
+    """Get API usage statistics for monitoring external service calls."""
+
+    today = date.today()
+    start_of_today = datetime.combine(today, datetime.min.time())
+    start_of_month = datetime.combine(today.replace(day=1), datetime.min.time())
+    start_of_range = datetime.combine(today - timedelta(days=days), datetime.min.time())
+
+    # Get unique services
+    services_result = await db.execute(
+        select(ApiCallLog.service).distinct()
+    )
+    services = [row[0] for row in services_result.all()]
+
+    service_stats = []
+    for service in services:
+        # Today's count
+        today_count = await db.scalar(
+            select(func.count(ApiCallLog.id))
+            .where(
+                ApiCallLog.service == service,
+                ApiCallLog.created_at >= start_of_today,
+                ApiCallLog.cache_hit == False  # Only actual API calls
+            )
+        ) or 0
+
+        # Month's count
+        month_count = await db.scalar(
+            select(func.count(ApiCallLog.id))
+            .where(
+                ApiCallLog.service == service,
+                ApiCallLog.created_at >= start_of_month,
+                ApiCallLog.cache_hit == False
+            )
+        ) or 0
+
+        # Cache hit rate (all time for this service)
+        total_requests = await db.scalar(
+            select(func.count(ApiCallLog.id))
+            .where(ApiCallLog.service == service)
+        ) or 0
+        cache_hits = await db.scalar(
+            select(func.count(ApiCallLog.id))
+            .where(
+                ApiCallLog.service == service,
+                ApiCallLog.cache_hit == True
+            )
+        ) or 0
+        cache_hit_rate = (cache_hits / total_requests * 100) if total_requests > 0 else 0
+
+        # Average response time (non-cache hits only)
+        avg_response_time = await db.scalar(
+            select(func.avg(ApiCallLog.response_time_ms))
+            .where(
+                ApiCallLog.service == service,
+                ApiCallLog.cache_hit == False,
+                ApiCallLog.response_time_ms.isnot(None)
+            )
+        ) or 0
+
+        # Error rate (non-2xx responses)
+        error_count = await db.scalar(
+            select(func.count(ApiCallLog.id))
+            .where(
+                ApiCallLog.service == service,
+                ApiCallLog.cache_hit == False,
+                ApiCallLog.status_code.isnot(None),
+                ~ApiCallLog.status_code.between(200, 299)
+            )
+        ) or 0
+        api_calls = await db.scalar(
+            select(func.count(ApiCallLog.id))
+            .where(
+                ApiCallLog.service == service,
+                ApiCallLog.cache_hit == False
+            )
+        ) or 0
+        error_rate = (error_count / api_calls * 100) if api_calls > 0 else 0
+
+        service_stats.append(ApiServiceStats(
+            service=service,
+            today_count=today_count,
+            month_count=month_count,
+            daily_limit=SERVICE_LIMITS.get(service),
+            cache_hit_rate=round(cache_hit_rate, 1),
+            avg_response_time_ms=round(float(avg_response_time), 0),
+            error_rate=round(error_rate, 1)
+        ))
+
+    # Daily calls breakdown
+    daily_result = await db.execute(
+        select(
+            func.date(ApiCallLog.created_at).label('call_date'),
+            func.count(ApiCallLog.id).label('count'),
+            func.sum(func.cast(ApiCallLog.cache_hit, type_=func.Integer)).label('cache_hits')
+        )
+        .where(ApiCallLog.created_at >= start_of_range)
+        .group_by(func.date(ApiCallLog.created_at))
+        .order_by(func.date(ApiCallLog.created_at))
+    )
+
+    daily_calls = [
+        ApiDailyCall(
+            date=str(row.call_date),
+            count=row.count,
+            cache_hits=row.cache_hits or 0
+        )
+        for row in daily_result.all()
+    ]
+
+    return ApiUsageAnalytics(
+        services=service_stats,
+        daily_calls=daily_calls
     )
