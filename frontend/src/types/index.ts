@@ -34,6 +34,7 @@ export interface Trip {
   preferences: TripPreferences
   share_code: string
   owner_id: string
+  is_archived: boolean
   created_at: string
   updated_at: string
 }
