@@ -117,6 +117,18 @@ class ApiClient {
     })
   }
 
+  async archiveTrip(id: string) {
+    return this.request(`/trips/${id}/archive`, {
+      method: 'POST',
+    })
+  }
+
+  async unarchiveTrip(id: string) {
+    return this.request(`/trips/${id}/unarchive`, {
+      method: 'POST',
+    })
+  }
+
   // Itinerary endpoints
   async getItineraryItems(tripId: string) {
     return this.request(`/trips/${tripId}/itinerary`)

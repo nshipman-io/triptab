@@ -6,9 +6,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   Plane, Hotel, MapPin, Utensils, Car, Calendar, Users, Share2,
   Check, Copy, ArrowLeft, ExternalLink, Search, Compass, Settings2,
-  ListTodo, DollarSign, Pencil, Trash2, X
+  ListTodo, DollarSign, Pencil, Trash2, X, CheckCircle, RotateCcw, Info
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { Trip, ItineraryItem, TripMember, ItineraryItemType, TripPreferences, User, WeatherResponse } from '@/types'
@@ -57,6 +65,10 @@ export function TripDetail() {
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Archive state
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false)
+  const [isArchiving, setIsArchiving] = useState(false)
 
   // Edit trip details state (destination, dates, travelers)
   const [isEditingDetails, setIsEditingDetails] = useState(false)
@@ -253,6 +265,33 @@ export function TripDetail() {
     }
   }
 
+  const handleArchiveTrip = async () => {
+    if (!id) return
+    setIsArchiving(true)
+    try {
+      const updatedTrip = await api.archiveTrip(id) as Trip
+      setTrip(updatedTrip)
+      setShowArchiveConfirm(false)
+    } catch (error) {
+      console.error('Failed to archive trip:', error)
+    } finally {
+      setIsArchiving(false)
+    }
+  }
+
+  const handleUnarchiveTrip = async () => {
+    if (!id) return
+    setIsArchiving(true)
+    try {
+      const updatedTrip = await api.unarchiveTrip(id) as Trip
+      setTrip(updatedTrip)
+    } catch (error) {
+      console.error('Failed to unarchive trip:', error)
+    } finally {
+      setIsArchiving(false)
+    }
+  }
+
   const handleSavePreferences = async (preferences: TripPreferences) => {
     if (!id) return
     const updatedTrip = await api.updateTrip(id, { preferences })
@@ -354,6 +393,30 @@ export function TripDetail() {
         </div>
       )}
 
+      {/* Archive Confirmation Dialog */}
+      <Dialog open={showArchiveConfirm} onOpenChange={setShowArchiveConfirm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mark trip as complete?</DialogTitle>
+            <DialogDescription>
+              You can reactivate it anytime from your dashboard or the trip page.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowArchiveConfirm(false)}
+              disabled={isArchiving}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleArchiveTrip} disabled={isArchiving}>
+              {isArchiving ? 'Completing...' : 'Complete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <header className="border-b border-sand-dark bg-cream w-full max-w-full overflow-hidden">
         <div className="w-full max-w-full px-4 md:container md:mx-auto md:px-6 py-4">
@@ -436,6 +499,32 @@ export function TripDetail() {
           </div>
         </div>
       </header>
+
+      {/* Archived Trip Banner */}
+      {trip.is_archived && (
+        <div className="bg-sand-dark border-b border-sand-dark">
+          <div className="w-full px-4 md:container md:mx-auto md:px-6 py-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-ink">
+                <Info className="h-4 w-4 text-ink-light" />
+                <span className="text-sm font-medium">This trip is complete</span>
+              </div>
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleUnarchiveTrip}
+                  disabled={isArchiving}
+                  className="gap-1 text-xs"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  {isArchiving ? 'Reactivating...' : 'Reactivate'}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="w-full px-4 md:container md:mx-auto md:px-6 py-6 md:py-8 overflow-hidden">
         {/* Import Dialog */}
@@ -869,6 +958,37 @@ export function TripDetail() {
                     </CardContent>
                   </Card>
 
+                  {/* Trip Actions - Mobile */}
+                  {canEdit && (
+                    <Card className="p-4">
+                      <CardHeader className="p-0 mb-3">
+                        <CardTitle className="text-lg font-serif">Trip Actions</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0 space-y-2">
+                        {trip.is_archived ? (
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start gap-2"
+                            onClick={handleUnarchiveTrip}
+                            disabled={isArchiving}
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                            {isArchiving ? 'Reactivating...' : 'Reactivate Trip'}
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start gap-2"
+                            onClick={() => setShowArchiveConfirm(true)}
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            Mark Complete
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
                   {/* Trip Members */}
                   <MemberManagement
                     tripId={id!}
@@ -1244,6 +1364,37 @@ export function TripDetail() {
               onSave={handleSavePreferences}
               canEdit={canEdit}
             />
+
+            {/* Trip Actions */}
+            {canEdit && (
+              <Card className="p-6">
+                <CardHeader className="p-0 mb-4">
+                  <CardTitle className="text-lg font-serif">Trip Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 space-y-2">
+                  {trip.is_archived ? (
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2"
+                      onClick={handleUnarchiveTrip}
+                      disabled={isArchiving}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      {isArchiving ? 'Reactivating...' : 'Reactivate Trip'}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2"
+                      onClick={() => setShowArchiveConfirm(true)}
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      Mark Complete
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Share Link */}
             <Card className="p-6">
