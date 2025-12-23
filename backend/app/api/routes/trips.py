@@ -154,6 +154,70 @@ async def delete_trip(trip_id: str, current_user: CurrentUser, db: DbSession):
     return {"message": "Trip deleted"}
 
 
+@router.post("/{trip_id}/archive", response_model=TripResponse)
+async def archive_trip(trip_id: str, current_user: CurrentUser, db: DbSession):
+    """Mark a trip as complete/archived. Owner and editors can archive."""
+    # Check if user is owner
+    result = await db.execute(
+        select(Trip).where(Trip.id == trip_id, Trip.owner_id == current_user.id)
+    )
+    trip = result.scalar_one_or_none()
+
+    # If not owner, check if user is an editor member
+    if not trip:
+        result = await db.execute(
+            select(Trip)
+            .join(TripMember)
+            .where(
+                Trip.id == trip_id,
+                TripMember.user_id == current_user.id,
+                TripMember.role.in_([MemberRole.OWNER, MemberRole.EDITOR])
+            )
+        )
+        trip = result.scalar_one_or_none()
+
+    if not trip:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found")
+
+    trip.is_archived = True
+    await db.flush()
+    await db.refresh(trip)
+
+    return trip
+
+
+@router.post("/{trip_id}/unarchive", response_model=TripResponse)
+async def unarchive_trip(trip_id: str, current_user: CurrentUser, db: DbSession):
+    """Reactivate an archived trip. Owner and editors can unarchive."""
+    # Check if user is owner
+    result = await db.execute(
+        select(Trip).where(Trip.id == trip_id, Trip.owner_id == current_user.id)
+    )
+    trip = result.scalar_one_or_none()
+
+    # If not owner, check if user is an editor member
+    if not trip:
+        result = await db.execute(
+            select(Trip)
+            .join(TripMember)
+            .where(
+                Trip.id == trip_id,
+                TripMember.user_id == current_user.id,
+                TripMember.role.in_([MemberRole.OWNER, MemberRole.EDITOR])
+            )
+        )
+        trip = result.scalar_one_or_none()
+
+    if not trip:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found")
+
+    trip.is_archived = False
+    await db.flush()
+    await db.refresh(trip)
+
+    return trip
+
+
 @router.post("/join/{share_code}", response_model=TripMemberResponse)
 async def join_trip(share_code: str, current_user: CurrentUser, db: DbSession):
     # Find trip

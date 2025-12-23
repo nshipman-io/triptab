@@ -50,6 +50,7 @@ class TripResponse(BaseModel):
     preferences: dict
     share_code: str
     owner_id: str
+    is_archived: bool
     created_at: datetime
     updated_at: datetime
 

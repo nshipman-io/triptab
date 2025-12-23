@@ -55,6 +55,7 @@ class Trip(Base):
         onupdate=datetime.utcnow,
         nullable=False
     )
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Relationships
     owner = relationship("User", back_populates="owned_trips")
